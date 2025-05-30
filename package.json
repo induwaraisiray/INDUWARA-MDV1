@@ -53,6 +53,7 @@
     "os":"0.1.2",
     "hirunews-scrap":"1.1.4",
     "@sl-code-lords/esana-news":"1.1.0",
-    "esana-node-api":"3.0.1"
+    "esana-node-api":"3.0.1",
+    "adaderana-scraper":"1.1.1"
   }
 }
