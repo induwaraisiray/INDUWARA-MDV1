@@ -1,48 +1,97 @@
-const { cmd } = require('../command'); const { Esana } = require('esana-node-api');
+const { cmd } = require('../command');
+const Esana = require('esana-node-api');
 
-let activeGroups = {}; let lastNewsId = {};
+let activeGroups = {};
+let lastNewsTitle = {};
 
-// Fetch latest Esana news async function fetchLatestNews() { try { await Esana.verify('your_passcode_here'); // Replace with your real passcode const news = await Esana.fetch_news_data(); return news?.esana || null; } catch (err) { console.error('Error fetching Esana news:', err); return null; } }
+async function getLatestEsanaNews(passcode) {
+  try {
+    const news = await Esana.latestNews(passcode);
+    return news;
+  } catch (error) {
+    console.error('🛑 Esana API Error:', error.message);
+    return null;
+  }
+}
 
-// Broadcast new news to group async function checkAndSendNews(conn, groupId) { const news = await fetchLatestNews(); if (news && (!lastNewsId[groupId] || news.news_id !== lastNewsId[groupId])) { const message = `📰 Esana News
+// 📰 Command to manually get latest news
+cmd({
+  pattern: "getnews",
+  desc: "Manually get latest Sinhala news from Esana",
+  filename: __filename
+}, async (conn, m, msg) => {
+  const news = await getLatestEsanaNews("https://www.npmjs.com/package/esana-node-api");
+  if (!news) return await conn.sendMessage(msg.from, { text: "😓 Unable to fetch news from Esana." });
 
-${news.title} ${news.description} 🗓️ ${news.date} 🔗 ${news.url}`;
+  let text = `*🗞️ ${news.title}*\n\n${news.description}\n🗓️ ${news.date}\n🔗 ${news.url}`;
+  await conn.sendMessage(msg.from, { text });
+});
 
-await conn.sendMessage(groupId, { text: message });
-lastNewsId[groupId] = news.news_id;
+// 🟢 Start auto news
+cmd({
+  pattern: "startnews",
+  desc: "Enable Sinhala news updates in this group",
+  isGroup: true,
+  react: "🟢",
+  filename: __filename
+}, async (conn, m, msg, { from, participants }) => {
+  const sender = m.sender;
+  const isAdmin = participants.some(p => p.id === sender && p.admin);
+  const isBotOwner = sender === conn.user.jid;
 
-} }
+  if (!isAdmin && !isBotOwner) {
+    return await conn.sendMessage(from, { text: "🚫 Only group admins or bot owner can start news." });
+  }
 
-// /startnews command cmd({ pattern: 'startnews', desc: 'Start Sinhala news updates from Esana', isGroup: true, react: '🗞️', filename: __filename }, async (conn, mek, m, { from, isGroup, participants }) => { if (!isGroup) return await conn.sendMessage(from, { text: 'Group command only.' });
+  if (activeGroups[from]) {
+    return await conn.sendMessage(from, { text: "📰 News already active in this group." });
+  }
 
-const isAdmin = participants.some(p => p.id === mek.sender && p.admin); const isOwner = mek.sender === conn.user.jid; if (!isAdmin && !isOwner) return await conn.sendMessage(from, { text: 'Admins only.' });
+  activeGroups[from] = true;
+  await conn.sendMessage(from, { text: "🗞️ Esana Sinhala news started in this group!" });
 
-if (!activeGroups[from]) { activeGroups[from] = true; await conn.sendMessage(from, { text: '✅ Sinhala news auto-updates started.' });
+  if (!activeGroups['interval']) {
+    activeGroups['interval'] = setInterval(async () => {
+      for (const groupId in activeGroups) {
+        if (groupId !== 'interval' && activeGroups[groupId]) {
+          const news = await getLatestEsanaNews("YOUR_PASSCODE_HERE");
+          if (news && lastNewsTitle[groupId] !== news.title) {
+            lastNewsTitle[groupId] = news.title;
 
-if (!activeGroups['interval']) {
-  activeGroups['interval'] = setInterval(async () => {
-    for (const groupId in activeGroups) {
-      if (groupId !== 'interval') await checkAndSendNews(conn, groupId);
+            let text = `*🗞️ ${news.title}*\n\n${news.description}\n🗓️ ${news.date}\n🔗 ${news.url}`;
+            await conn.sendMessage(groupId, { text });
+          }
+        }
+      }
+    }, 180000); // every 3 minutes
+  }
+});
+
+// 🔴 Stop news
+cmd({
+  pattern: "stopnews",
+  desc: "Disable Sinhala news updates in this group",
+  isGroup: true,
+  react: "🔴",
+  filename: __filename
+}, async (conn, m, msg, { from, participants }) => {
+  const sender = m.sender;
+  const isAdmin = participants.some(p => p.id === sender && p.admin);
+  const isBotOwner = sender === conn.user.jid;
+
+  if (!isAdmin && !isBotOwner) {
+    return await conn.sendMessage(from, { text: "🚫 Only group admins or bot owner can stop news." });
+  }
+
+  if (activeGroups[from]) {
+    delete activeGroups[from];
+    await conn.sendMessage(from, { text: "❌ News disabled in this group." });
+
+    if (Object.keys(activeGroups).length === 1 && activeGroups['interval']) {
+      clearInterval(activeGroups['interval']);
+      delete activeGroups['interval'];
     }
-  }, 60000); // 1 min
-}
-
-} else { await conn.sendMessage(from, { text: 'Already activated.' }); } });
-
-// /stopnews command cmd({ pattern: 'stopnews', desc: 'Stop Sinhala news updates', isGroup: true, react: '❌', filename: __filename }, async (conn, mek, m, { from, isGroup, participants }) => { if (!isGroup) return await conn.sendMessage(from, { text: 'Group command only.' });
-
-const isAdmin = participants.some(p => p.id === mek.sender && p.admin); const isOwner = mek.sender === conn.user.jid; if (!isAdmin && !isOwner) return await conn.sendMessage(from, { text: 'Admins only.' });
-
-if (activeGroups[from]) { delete activeGroups[from]; await conn.sendMessage(from, { text: '🛑 Sinhala news auto-updates stopped.' });
-
-if (Object.keys(activeGroups).length === 1 && activeGroups['interval']) {
-  clearInterval(activeGroups['interval']);
-  delete activeGroups['interval'];
-}
-
-} else { await conn.sendMessage(from, { text: 'Not activated yet.' }); } });
-
-// /getnews command cmd({ pattern: 'getnews', desc: 'Get the latest Sinhala Esana news manually', react: '📰', filename: __filename }, async (conn, mek, m, { from }) => { const news = await fetchLatestNews(); if (news) { const message = `📰 Esana News
-
-${news.title} ${news.description} 🗓️ ${news.date} 🔗 ${news.url}`; await conn.sendMessage(from, { text: message }); } else { await conn.sendMessage(from, { text: '❌ Unable to fetch news.' }); } });
-
+  } else {
+    await conn.sendMessage(from, { text: "ℹ️ News was not active in this group." });
+  }
+});
