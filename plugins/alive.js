@@ -12,7 +12,6 @@ cmd({
 },
 async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
     try {
-        // System status message
         const status = `╭━━〔 *D-XTRO-MD* 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• *⏳Uptime*:  ${runtime(process.uptime())} 
@@ -29,14 +28,13 @@ async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sen
 
 > © ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴍʀ ᴅɪɴᴇꜱʜ`;
 
-        // Voice message URL (PTT voice message)
         const voiceUrl = 'https://files.catbox.moe/5cs6nk.mp3';
 
-        // 1. Send PTT Voice First (With Channel View Link)
+        // 1. Send voice (PTT) message
         const voiceMessage = await conn.sendMessage(from, {
             audio: { url: voiceUrl },
             mimetype: 'audio/mpeg',
-            ptt: true, // Send as voice message (PTT)
+            ptt: true,
             contextInfo: {
                 forwardingScore: 999,
                 isForwarded: true,
@@ -48,13 +46,18 @@ async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sen
             }
         }, { quoted: mek });
 
-        // Wait for 2 seconds before sending image + text
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 2000)); // wait 2s
 
-        // 2. Send Image + Caption After Voice
+        // 2. Send image + caption + buttons
         await conn.sendMessage(from, {
-            image: { url: `https://i.postimg.cc/44vBQhjF/IMG-20250206-224743.jpg` }, // Image URL
+            image: { url: `https://i.postimg.cc/44vBQhjF/IMG-20250206-224743.jpg` },
             caption: status,
+            footer: "🔘 Select an option below:",
+            buttons: [
+                { buttonId: 'menu', buttonText: { displayText: '📜 Menu' }, type: 1 },
+                { buttonId: 'ping', buttonText: { displayText: '📶 Ping' }, type: 1 }
+            ],
+            headerType: 4,
             contextInfo: {
                 mentionedJid: [m.sender],
                 forwardingScore: 999,
@@ -69,6 +72,25 @@ async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sen
 
     } catch (e) {
         console.error("Error in alive command:", e);
-        reply(`An error occurred: ${e.message}`);
+        reply(`❌ Error: ${e.message}`);
     }
+});
+
+// Optional: Handle 'menu' and 'ping' buttons
+cmd({
+    pattern: "menu",
+    desc: "Show main menu",
+    category: "main",
+    filename: __filename
+}, async (conn, mek, m, { reply }) => {
+    reply("📜 *Main Menu*\n\n✅ /alive\n✅ /ping\n✅ /news\n✅ /jataka 45\n...");
+});
+
+cmd({
+    pattern: "ping",
+    desc: "Check bot response",
+    category: "main",
+    filename: __filename
+}, async (conn, mek, m, { reply }) => {
+    reply("🏓 *Pong!* Bot is alive and responding ✅");
 });
