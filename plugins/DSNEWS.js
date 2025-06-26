@@ -2,6 +2,10 @@ const { cmd } = require('../command');
 const Hiru = require('hirunews-scrap');
 const Esana = require('@sl-code-lords/esana-news');
 const config = require('../config');
+const axios = require('axios'); // <-- Add axios for making HTTP requests to your proxy
+
+// Heroku Proxy URL for Lankadeepa News (Replace with your actual URL if it's different)
+const LANKADEEPA_NEWS_PROXY_URL = 'https://newsapimd-bd11ea123e8f.herokuapp.com/api/lankadeepa-news'; 
 
 let activeGroups = {};
 let lastNewsTitles = {};
@@ -19,23 +23,29 @@ function getRandomGifVideo() {
 async function getLatestNews() {
     let newsData = [];
 
+    // --- Hiru News (Existing) ---
     try {
         const hiruApi = new Hiru();
         const hiruNews = await hiruApi.BreakingNews();
-        newsData.push({
-            title: hiruNews.results.title,
-            content: hiruNews.results.news,
-            date: hiruNews.results.date
-        });
+        if (hiruNews?.results?.title && hiruNews?.results?.news && hiruNews?.results?.date) {
+            newsData.push({
+                source: "Hiru News",
+                title: hiruNews.results.title,
+                content: hiruNews.results.news,
+                date: hiruNews.results.date
+            });
+        }
     } catch (err) {
         console.error(`Error fetching Hiru News: ${err.message}`);
     }
 
+    // --- Esana News (Existing) ---
     try {
         const esanaApi = new Esana();
         const esanaNews = await esanaApi.getLatestNews();
         if (esanaNews?.title && esanaNews?.description && esanaNews?.publishedAt) {
             newsData.push({
+                source: "Esana News",
                 title: esanaNews.title,
                 content: esanaNews.description,
                 date: esanaNews.publishedAt
@@ -45,18 +55,44 @@ async function getLatestNews() {
         console.error(`Error fetching Esana News: ${err.message}`);
     }
 
+    // --- Lankadeepa News (NEW - Using your Heroku Proxy) ---
+    try {
+        const lankadeepaResponse = await axios.get(LANKADEEPA_NEWS_PROXY_URL);
+        if (lankadeepaResponse.data && lankadeepaResponse.data.articles && lankadeepaResponse.data.articles.length > 0) {
+            // Get the first article or iterate through multiple
+            const latestLankadeepa = lankadeepaResponse.data.articles[0]; 
+            newsData.push({
+                source: "Lankadeepa News",
+                title: latestLankadeepa.title,
+                content: latestLankadeepa.description || latestLankadeepa.title, // Use description if available, otherwise title
+                date: "N/A" // Lankadeepa scraper might not provide date easily, update if needed
+            });
+        } else {
+            console.log("No Lankadeepa news found or scraping failed via proxy.");
+        }
+    } catch (err) {
+        console.error(`Error fetching Lankadeepa News from proxy: ${err.message}`);
+        if (err.response) {
+            console.error(`Lankadeepa Proxy Response Error: ${JSON.stringify(err.response.data)}`);
+        }
+    }
+
     return newsData;
 }
 
 async function checkAndPostNews(conn, groupId) {
     const latestNews = await getLatestNews();
 
-    latestNews.forEach(async (newsItem) => {
+    for (const newsItem of latestNews) { // Use for...of loop for async operations inside
         if (!lastNewsTitles[groupId]) lastNewsTitles[groupId] = [];
 
-        if (!lastNewsTitles[groupId].includes(newsItem.title)) {
+        // Create a unique identifier for the news item (title + source)
+        const newsIdentifier = `${newsItem.source}: ${newsItem.title}`;
+
+        if (!lastNewsTitles[groupId].includes(newsIdentifier)) {
             const gifVideo = getRandomGifVideo();
-            const caption = `*🔵 𝐍𝐄𝐖𝐒 𝐀𝐋𝐄𝐑𝐓!*\n▁ ▂ ▄ ▅ ▆ ▇ █ [  ] █ ▇ ▆ ▅ ▄ ▂ ▁\n\n📰 *${newsItem.title}*\n\n${newsItem.content}\n\n${newsItem.date}\n\n> *©ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴍʀ ᴅɪɴᴇꜱʜ ᴏꜰᴄ*\n> *QUEEN-SADU-MD & D-XTRO-MD*`;
+            // Customize caption to include source
+            const caption = `*🔵 𝐍𝐄𝐖𝐒 𝐀𝐋𝐄𝐑𝐓!*\n  ▂ ▄ ▅ ▆ ▇ █ [  ] █ ▇ ▆ ▅ ▄ ▂  \n\n📰 *${newsItem.title}*\n\n${newsItem.content}\n\n${newsItem.date}\n\n> *©ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴍʀ ᴅɪɴᴇꜱʜ ᴏꜰᴄ*\n> *QUEEN-SADU-MD & D-XTRO-MD*`;
 
             try {
                 await conn.sendMessage(groupId, {
@@ -66,14 +102,17 @@ async function checkAndPostNews(conn, groupId) {
                     gifPlayback: true
                 });
 
-                lastNewsTitles[groupId].push(newsItem.title);
-                if (lastNewsTitles[groupId].length > 100) lastNewsTitles[groupId].shift();
+                lastNewsTitles[groupId].push(newsIdentifier); // Store unique identifier
+                // Keep the array size manageable
+                if (lastNewsTitles[groupId].length > 100) {
+                    lastNewsTitles[groupId].shift();
+                }
 
             } catch (e) {
-                console.error(`Failed to send video message: ${e.message}`);
+                console.error(`Failed to send video message for ${newsItem.source} - ${newsItem.title}: ${e.message}`);
             }
         }
-    });
+    }
 }
 
 cmd({
@@ -94,14 +133,15 @@ cmd({
 
                     await conn.sendMessage(from, { text: "🇱🇰 Auto 24/7 News Activated.\n\n> QUEEN-SADU-MD & D-XTRO-MD" });
 
-                    if (!activeGroups['interval']) {
-                        activeGroups['interval'] = setInterval(async () => {
+                    // Ensure interval runs only once globally
+                    if (!activeGroups['intervalId']) { // Changed 'interval' to 'intervalId' to avoid key collision
+                        activeGroups['intervalId'] = setInterval(async () => {
                             for (const groupId in activeGroups) {
-                                if (activeGroups[groupId] && groupId !== 'interval') {
+                                if (activeGroups[groupId] && groupId !== 'intervalId') { // Check for 'intervalId'
                                     await checkAndPostNews(conn, groupId);
                                 }
                             }
-                        }, 60000);
+                        }, 60000); // Check every 1 minute
                     }
                 } else {
                     await conn.sendMessage(from, { text: "*✅ 24/7 News Already Activated.*\n\n> QUEEN-SADU-MD & D-XTRO-MD" });
@@ -135,9 +175,11 @@ cmd({
                     delete activeGroups[from];
                     await conn.sendMessage(from, { text: "*🛑 News updates disabled in this group*" });
 
-                    if (Object.keys(activeGroups).length === 1 && activeGroups['interval']) {
-                        clearInterval(activeGroups['interval']);
-                        delete activeGroups['interval'];
+                    // Clear the interval only if no other groups are active
+                    // Check if 'intervalId' exists and no other groups are active (excluding 'intervalId' itself)
+                    if (activeGroups['intervalId'] && Object.keys(activeGroups).filter(key => key !== 'intervalId').length === 0) {
+                        clearInterval(activeGroups['intervalId']);
+                        delete activeGroups['intervalId'];
                     }
                 } else {
                     await conn.sendMessage(from, { text: "⚠️ News updates not active in this group." });
