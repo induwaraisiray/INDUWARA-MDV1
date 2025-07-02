@@ -53,8 +53,6 @@
     "os":"0.1.2",
     "hirunews-scrap":"1.1.4",
     "@sl-code-lords/esana-news":"1.1.0",
-    "dependencies": {
-  "@vitalets/google-translate-api": "^9.0.0"
-    }
+    "@vitalets/google-translate-api": "^9.0.0"   
   }
 }
