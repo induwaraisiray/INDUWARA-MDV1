@@ -2,7 +2,7 @@ const { cmd } = require('../command');
 
 // Voice links (MP3s)
 const voiceLinks = [
-    ''https://files.catbox.moe/4i7ccz.mp3',
+    'https://files.catbox.moe/4i7ccz.mp3',
     'https://files.catbox.moe/c0rswx.mp3',
     'https://files.catbox.moe/hgyeth.mp3',
     'https://files.catbox.moe/lleedr.mp3',
@@ -36,7 +36,6 @@ const voiceLinks = [
     'https://files.catbox.moe/6l9ush.mp3',
     'https://files.catbox.moe/qvxtep.mp3',
     'https://files.catbox.moe/kmoy0h.mp3'
-    // අනිත් ඒවාත් එකතු කරන්න
 ];
 
 // Text messages list
@@ -50,12 +49,11 @@ const textMessages = [
     "🚀 හැමදාම update වෙලා තියෙනවා!"
 ];
 
-// Command
 cmd({
     pattern: "list",
     react: "🛸",
     alias: ["✓", "list", "music"],
-    desc: "Get bot's command list with random voice + message.",
+    desc: "Send document audio with caption",
     category: "main",
     use: '.menu3',
     filename: __filename
@@ -68,16 +66,12 @@ async (conn, mek, m, { from, pushname, reply }) => {
         // pick a random text message
         const randomText = textMessages[Math.floor(Math.random() * textMessages.length)];
 
-        // send the text message first
-        await conn.sendMessage(from, { 
-          text: `👨🏻‍💻 *${pushname}*\n\n${randomText}` 
-        });
-
-        // then send the PTT
-        await conn.sendMessage(from, { 
-            audio: { url: randomVoiceLink }, 
-            mimetype: 'audio/mp4', 
-            ptt: true 
+        // send as document (with caption)
+        await conn.sendMessage(from, {
+            document: { url: randomVoiceLink },
+            fileName: "voice.mp3",
+            mimetype: "audio/mp3",
+            caption: `👨🏻‍💻 *${pushname}*\n\n${randomText}`
         });
 
     } catch (e) {
