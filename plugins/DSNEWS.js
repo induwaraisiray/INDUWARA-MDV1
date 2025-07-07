@@ -4,7 +4,7 @@ const axios = require('axios')
 const { fetchJson } = require('../lib/functions')
 
 const apilink = 'https://nethu-api.vercel.app/news'
-let wm = 'POWERED BY MRD AI' // << මෙතන වෙනස් කර ඇත
+let wm = 'Creater Nethmika Kaushalya'
 let latestNews = {}
 let newsInterval = null
 let alertEnabled = false
@@ -22,13 +22,10 @@ const newsSites = [
     { name: "Gossip Lanka", url: `${apilink}/gossiplankanews` }
 ]
 
-async function checkAndSendNews(conn, from, isGroup, isOwner) { // isOwner check එක මෙතන තියාගන්න, පහලින් පැහැදිලි කරලා තියෙනවා
+async function checkAndSendNews(conn, from, isGroup, isOwner) {
     try {
         if (!isGroup) return;
-        // if (!isOwner) return; // << මෙම පේළිය මකා දමනු ලැබේ හෝ comment කරනු ලැබේ (ඔබට අවශ්‍ය නම්)
-        // මෙම if (!isOwner) return; පේළිය මෙතැනින් සම්පූර්ණයෙන්ම ඉවත් කිරීම වඩාත් සුදුසුයි
-        // මක්නිසාද, if (!isAdmin) return reply(...) ලෙස command handler එකෙන් control කරන නිසා
-        // News send කිරීමට Owner වීම අනිවාර්යයෙන්ම අවශ්‍ය නොවේ නම්.
+        if (!isOwner) return;
 
         for (const site of newsSites) {
             const news = await fetchJson(site.url)
@@ -57,37 +54,37 @@ async function checkAndSendNews(conn, from, isGroup, isOwner) { // isOwner check
 
 // .newson Command (Enable Auto News)
 cmd({
-    pattern: "startnews",
+    pattern: "newson",
     alias: ["autonews"],
     react: "🟢",
     desc: "Enable auto news sending",
     category: "news",
     use: '.newson',
     filename: __filename
-}, async (conn, mek, m, { from, isGroup, isOwner, isAdmin, reply }) => { // isAdmin මෙතනට ඇතුලත් කර ඇත
+}, async (conn, mek, m, { from, isGroup, isOwner, reply }) => {
     if (!isGroup) return reply("❌ *This command can only be used in Groups!*")
-    if (!isAdmin) return reply("❌ *This command can only be used by Group Admins!*") // << isOwner වෙනුවට isAdmin
+    if (!isOwner) return reply("❌ *This command can only be used by Admins!*")
 
     if (newsInterval) return reply("✅ *Auto News already enabled!*")
 
     reply("✅ *Auto News enabled.*")
     newsInterval = setInterval(() => {
-        checkAndSendNews(conn, from, isGroup, isOwner) // මෙතන isOwner තිබීම ගැටලුවක් නැහැ, එය Bot හි configuration මත පදනම්ව news යවන්නද නැද්ද යන්න තීරණය කිරීමට තබනු ලැබේ.
+        checkAndSendNews(conn, from, isGroup, isOwner)
     }, 2 * 60 * 1000)
 })
 
 // .newsoff Command (Disable Auto News)
 cmd({
-    pattern: "stopnews",
+    pattern: "newsoff",
     alias: ["stopnews"],
     react: "🔴",
     desc: "Disable auto news sending",
     category: "news",
     use: '.newsoff',
     filename: __filename
-}, async (conn, mek, m, { from, isGroup, isOwner, isAdmin, reply }) => { // isAdmin මෙතනට ඇතුලත් කර ඇත
+}, async (conn, mek, m, { from, isGroup, isOwner, reply }) => {
     if (!isGroup) return reply("❌ *This command can only be used in Groups!*")
-    if (!isAdmin) return reply("❌ *This command can only be used by Group Admins!*") // << isOwner වෙනුවට isAdmin
+    if (!isOwner) return reply("❌ *This command can only be used by Admins!*")
 
     if (newsInterval) {
         clearInterval(newsInterval)
@@ -98,16 +95,16 @@ cmd({
 
 // .alerton Command (Enable Breaking News Alerts)
 cmd({
-    pattern: "newson",
+    pattern: "alerton",
     alias: ["newsalerton"],
     react: "🚨",
     desc: "Enable Breaking News Alerts",
     category: "news",
     use: '.alerton',
     filename: __filename
-}, async (conn, mek, m, { from, isGroup, isOwner, isAdmin, reply }) => { // isAdmin මෙතනට ඇතුලත් කර ඇත
+}, async (conn, mek, m, { from, isGroup, isOwner, reply }) => {
     if (!isGroup) return reply("❌ *This command can only be used in Groups!*")
-    if (!isAdmin) return reply("❌ *This command can only be used by Group Admins!*") // << isOwner වෙනුවට isAdmin
+    if (!isOwner) return reply("❌ *This command can only be used by Admins!*")
 
     alertEnabled = true
     reply("✅ *Breaking News Alerts enabled.*")
@@ -115,16 +112,16 @@ cmd({
 
 // .alertoff Command (Disable Breaking News Alerts)
 cmd({
-    pattern: "newsoff",
+    pattern: "alertoff",
     alias: ["newsalertoff"],
     react: "❌",
     desc: "Disable Breaking News Alerts",
     category: "news",
     use: '.alertoff',
     filename: __filename
-}, async (conn, mek, m, { from, isGroup, isOwner, isAdmin, reply }) => { // isAdmin මෙතනට ඇතුලත් කර ඇත
+}, async (conn, mek, m, { from, isGroup, isOwner, reply }) => {
     if (!isGroup) return reply("❌ *This command can only be used in Groups or Channels!*")
-    if (!isAdmin) return reply("❌ *This command can only be used by Group Admins!*") // << isOwner වෙනුවට isAdmin
+    if (!isOwner) return reply("❌ *This command can only be used by Admins!*")
 
     alertEnabled = false
     reply("🛑 *Breaking News Alerts disabled!*")
