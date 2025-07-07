@@ -95,7 +95,7 @@ cmd({
 
 // .alerton Command (Enable Breaking News Alerts)
 cmd({
-    pattern: "startnews",
+    pattern: "alertnewson",
     alias: ["newsalerton"],
     react: "🚨",
     desc: "Enable Breaking News Alerts",
@@ -112,7 +112,7 @@ cmd({
 
 // .alertoff Command (Disable Breaking News Alerts)
 cmd({
-    pattern: "stopnews",
+    pattern: "alertnewsoff",
     alias: ["newsalertoff"],
     react: "❌",
     desc: "Disable Breaking News Alerts",
