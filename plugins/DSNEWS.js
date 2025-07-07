@@ -54,7 +54,7 @@ async function checkAndSendNews(conn, from, isGroup, isOwner) {
 
 // .newson Command (Enable Auto News)
 cmd({
-    pattern: "startnews",
+    pattern: "newson",
     alias: ["autonews"],
     react: "🟢",
     desc: "Enable auto news sending",
@@ -75,7 +75,7 @@ cmd({
 
 // .newsoff Command (Disable Auto News)
 cmd({
-    pattern: "stopnews",
+    pattern: "newsoff",
     alias: ["stopnews"],
     react: "🔴",
     desc: "Disable auto news sending",
@@ -95,7 +95,7 @@ cmd({
 
 // .alerton Command (Enable Breaking News Alerts)
 cmd({
-    pattern: "newson",
+    pattern: "startnews",
     alias: ["newsalerton"],
     react: "🚨",
     desc: "Enable Breaking News Alerts",
@@ -112,7 +112,7 @@ cmd({
 
 // .alertoff Command (Disable Breaking News Alerts)
 cmd({
-    pattern: "newsoff",
+    pattern: "stopnews",
     alias: ["newsalertoff"],
     react: "❌",
     desc: "Disable Breaking News Alerts",
