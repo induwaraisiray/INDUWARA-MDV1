@@ -4,7 +4,7 @@ const axios = require('axios')
 const { fetchJson } = require('../lib/functions')
 
 const apilink = 'https://nethu-api.vercel.app/news'
-let wm = 'Creater Nethmika Kaushalya'
+let wm = 'ᴩᴏᴡᴇʀᴇᴅ ʙʏ ᴍʀᴅ ᴀɪ'
 let latestNews = {}
 let newsInterval = null
 let alertEnabled = false
