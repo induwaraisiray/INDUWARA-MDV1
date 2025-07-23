@@ -21,24 +21,76 @@ async function fetchNewsFromAPI() {
     try {
         console.log('Fetching news from API...');
         const response = await axios.get('https://nethu-api.vercel.app/news', {
-            timeout: 10000,
+            timeout: 15000,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
         });
         
-        console.log('API Response:', response.data);
+        console.log('API Response structure:', typeof response.data, Array.isArray(response.data));
+        console.log('API Response sample:', JSON.stringify(response.data, null, 2));
         
-        if (response.data && response.data.length > 0) {
-            return response.data.map(item => ({
-                title: item.title || 'No Title',
-                content: item.description || item.content || 'No content available',
-                date: item.date || item.publishedAt || new Date().toLocaleDateString(),
-                source: 'NEWS D API',
-                url: item.url || ''
-            }));
+        let newsArray = [];
+        
+        // Handle different response structures
+        if (response.data) {
+            // If response.data is an array
+            if (Array.isArray(response.data)) {
+                response.data.forEach(item => {
+                    if (item && (item.title || item.headline)) {
+                        newsArray.push({
+                            title: item.title || item.headline || 'No Title',
+                            content: item.description || item.content || item.summary || 'No content available',
+                            date: item.date || item.publishedAt || item.time || new Date().toLocaleDateString(),
+                            source: 'NEWS D API',
+                            url: item.url || item.link || ''
+                        });
+                    }
+                });
+            }
+            // If response.data has a nested array (like .results, .data, .news, etc.)
+            else if (response.data.results && Array.isArray(response.data.results)) {
+                response.data.results.forEach(item => {
+                    if (item && (item.title || item.headline)) {
+                        newsArray.push({
+                            title: item.title || item.headline || 'No Title',
+                            content: item.description || item.content || item.summary || 'No content available',
+                            date: item.date || item.publishedAt || item.time || new Date().toLocaleDateString(),
+                            source: 'NEWS D API',
+                            url: item.url || item.link || ''
+                        });
+                    }
+                });
+            }
+            // If response.data.data exists
+            else if (response.data.data && Array.isArray(response.data.data)) {
+                response.data.data.forEach(item => {
+                    if (item && (item.title || item.headline)) {
+                        newsArray.push({
+                            title: item.title || item.headline || 'No Title',
+                            content: item.description || item.content || item.summary || 'No content available',
+                            date: item.date || item.publishedAt || item.time || new Date().toLocaleDateString(),
+                            source: 'NEWS D API',
+                            url: item.url || item.link || ''
+                        });
+                    }
+                });
+            }
+            // If it's a single news object
+            else if (response.data.title || response.data.headline) {
+                newsArray.push({
+                    title: response.data.title || response.data.headline || 'No Title',
+                    content: response.data.description || response.data.content || response.data.summary || 'No content available',
+                    date: response.data.date || response.data.publishedAt || response.data.time || new Date().toLocaleDateString(),
+                    source: 'NEWS D API',
+                    url: response.data.url || response.data.link || ''
+                });
+            }
         }
-        return [];
+        
+        console.log(`API news extracted: ${newsArray.length} items`);
+        return newsArray;
+        
     } catch (error) {
         console.error(`API fetch error: ${error.message}`);
         return [];
@@ -50,7 +102,24 @@ async function fetchEsanaNews() {
     try {
         console.log('Fetching Esana News...');
         const esanaApi = new Esana();
-        const esanaNews = await esanaApi.getLatestNews();
+        
+        // Try different method names that might exist in the API
+        let esanaNews = null;
+        
+        // Try common method names
+        if (typeof esanaApi.getLatestNews === 'function') {
+            esanaNews = await esanaApi.getLatestNews();
+        } else if (typeof esanaApi.getNews === 'function') {
+            esanaNews = await esanaApi.getNews();
+        } else if (typeof esanaApi.latest === 'function') {
+            esanaNews = await esanaApi.latest();
+        } else if (typeof esanaApi.breakingNews === 'function') {
+            esanaNews = await esanaApi.breakingNews();
+        } else {
+            console.log('Esana API methods:', Object.getOwnPropertyNames(esanaApi));
+            console.log('Esana API available methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(esanaApi)));
+            throw new Error('No suitable method found in Esana API');
+        }
         
         console.log('Esana API Response:', esanaNews);
         
@@ -59,49 +128,80 @@ async function fetchEsanaNews() {
         if (esanaNews) {
             if (Array.isArray(esanaNews)) {
                 esanaNews.forEach(item => {
-                    if (item.title && (item.description || item.content)) {
+                    if (item && (item.title || item.headline)) {
                         newsArray.push({
-                            title: item.title,
-                            content: item.description || item.content,
-                            date: item.publishedAt || item.date || new Date().toLocaleDateString(),
+                            title: item.title || item.headline,
+                            content: item.description || item.content || item.summary || 'No content available',
+                            date: item.publishedAt || item.date || item.time || new Date().toLocaleDateString(),
                             source: 'Esana News',
-                            url: item.url || ''
+                            url: item.url || item.link || ''
                         });
                     }
                 });
-            } else if (esanaNews.title && (esanaNews.description || esanaNews.content)) {
+            } else if (esanaNews.title || esanaNews.headline) {
                 newsArray.push({
-                    title: esanaNews.title,
-                    content: esanaNews.description || esanaNews.content,
-                    date: esanaNews.publishedAt || esanaNews.date || new Date().toLocaleDateString(),
+                    title: esanaNews.title || esanaNews.headline,
+                    content: esanaNews.description || esanaNews.content || esanaNews.summary || 'No content available',
+                    date: esanaNews.publishedAt || esanaNews.date || esanaNews.time || new Date().toLocaleDateString(),
                     source: 'Esana News',
-                    url: esanaNews.url || ''
+                    url: esanaNews.url || esanaNews.link || ''
+                });
+            } else if (esanaNews.results && Array.isArray(esanaNews.results)) {
+                esanaNews.results.forEach(item => {
+                    if (item && (item.title || item.headline)) {
+                        newsArray.push({
+                            title: item.title || item.headline,
+                            content: item.description || item.content || item.summary || 'No content available',
+                            date: item.publishedAt || item.date || item.time || new Date().toLocaleDateString(),
+                            source: 'Esana News',
+                            url: item.url || item.link || ''
+                        });
+                    }
                 });
             }
         }
         
+        console.log(`Esana news extracted: ${newsArray.length} items`);
         return newsArray;
+        
     } catch (error) {
         console.error(`Esana fetch error: ${error.message}`);
         return [];
     }
 }
 
-// Get all latest news
+// Get all latest news with fallback system
 async function getLatestNews() {
     let allNews = [];
 
     // Fetch from your API first (priority)
     const apiNews = await fetchNewsFromAPI();
+    console.log(`API returned: ${apiNews.length} news items`);
     allNews = [...apiNews];
 
-    // Fetch from Esana if API news is empty or as additional news
-    const esanaNews = await fetchEsanaNews();
-    allNews = [...allNews, ...esanaNews];
+    // If API didn't return any news, try Esana
+    if (allNews.length === 0) {
+        console.log('API returned no news, trying Esana...');
+        const esanaNews = await fetchEsanaNews();
+        console.log(`Esana returned: ${esanaNews.length} news items`);
+        allNews = [...esanaNews];
+    }
+
+    // If still no news, create a test news item
+    if (allNews.length === 0) {
+        console.log('No news from any source, creating test news...');
+        allNews.push({
+            title: "NEWS D Service Active",
+            content: "Sri Lankan news service is running. Latest news will be posted automatically when available from our sources.",
+            date: new Date().toLocaleDateString(),
+            source: 'NEWS D System',
+            url: ''
+        });
+    }
 
     // Remove duplicates based on title
     const uniqueNews = allNews.filter((news, index, self) => 
-        index === self.findIndex(n => n.title.toLowerCase() === news.title.toLowerCase())
+        index === self.findIndex(n => n.title.toLowerCase().trim() === news.title.toLowerCase().trim())
     );
 
     console.log(`Total unique news items: ${uniqueNews.length}`);
