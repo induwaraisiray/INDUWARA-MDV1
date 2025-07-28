@@ -38,7 +38,18 @@ function setCooldown(userId) {
     userCooldowns.set(userId, Date.now());
 }
 
-// Auto reply handler for all messages
+// Auto reply trigger words/commands
+const autoReplyTriggers = [
+    'hi', 'hello', 'hey', 'helo', 'හායි', 'හලෝ',
+    'mk', 'මක්', 'මොකක්', 'mokak', 'meka',
+    'bye', 'බායි', 'ගිහින් එන්නම්', 'යන්නම්',
+    'gm', 'good morning', 'ගුඩ් මෝනිං', 'සුභ උදෑසනක්',
+    'gn', 'good night', 'ගුඩ් නයිට්', 'සුභ රාත්‍රියක්',
+    'thank you', 'thanks', 'ස්තූතියි', 'තෑන්ක්ස්',
+    'ok', 'okay', 'ඔකේ', 'හරි'
+];
+
+// Auto reply handler for specific commands/words
 cmd({
     on: "text", // This will trigger for all text messages
     filename: __filename
@@ -49,8 +60,19 @@ async (conn, mek, m, { from, sender, body, isGroup, isOwner, isMe }) => {
         // - Bot's own messages
         // - Owner messages (optional)
         // - Group messages (you can remove this if you want group auto replies)
-        // - Command messages (starting with prefix)
-        if (isMe || isOwner || isGroup || body.startsWith(config.PREFIX)) {
+        if (isMe || isOwner || isGroup) {
+            return;
+        }
+
+        // Check if message contains any trigger word
+        const messageText = body.toLowerCase().trim();
+        const containsTrigger = autoReplyTriggers.some(trigger => 
+            messageText === trigger.toLowerCase() || 
+            messageText.includes(trigger.toLowerCase())
+        );
+
+        // If no trigger word found, don't reply
+        if (!containsTrigger) {
             return;
         }
 
@@ -59,11 +81,10 @@ async (conn, mek, m, { from, sender, body, isGroup, isOwner, isMe }) => {
             return; // Don't send auto reply
         }
 
-        // Randomly choose between text and voice (50-50 chance)
-        const sendVoice = Math.random() < 0.5;
+        // Send BOTH voice and text message for triggered words
         
-        if (sendVoice && autoReplyVoices.length > 0) {
-            // Send random voice message
+        // First send random voice message
+        if (autoReplyVoices.length > 0) {
             const randomVoice = autoReplyVoices[Math.floor(Math.random() * autoReplyVoices.length)];
             
             await conn.sendMessage(from, {
@@ -71,24 +92,24 @@ async (conn, mek, m, { from, sender, body, isGroup, isOwner, isMe }) => {
                 mimetype: 'audio/mp4',
                 ptt: true // This makes it a voice note
             });
-        } else {
-            // Send random text message
-            const randomText = autoReplyTexts[Math.floor(Math.random() * autoReplyTexts.length)];
-            
-            await conn.sendMessage(from, {
-                text: randomText,
-                contextInfo: {
-                    mentionedJid: [sender],
-                    forwardingScore: 999,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363354023102228@newsletter',
-                        newsletterName: "ᴅ-xᴛʀᴏ ᴀᴜᴛᴏ ʀᴇᴘʟʏ",
-                        serverMessageId: 143
-                    }
-                }
-            });
         }
+        
+        // Then send random text message
+        const randomText = autoReplyTexts[Math.floor(Math.random() * autoReplyTexts.length)];
+        
+        await conn.sendMessage(from, {
+            text: randomText,
+            contextInfo: {
+                mentionedJid: [sender],
+                forwardingScore: 999,
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                    newsletterJid: '120363354023102228@newsletter',
+                    newsletterName: "ᴅ-xᴛʀᴏ ᴀᴜᴛᴏ ʀᴇᴘʟʏ",
+                    serverMessageId: 143
+                }
+            }
+        });
 
         // Set cooldown for this user
         setCooldown(sender);
@@ -135,81 +156,5 @@ async (conn, mek, m, { from, sender, reply }) => {
     } catch (e) {
         console.error("Error in getreply command:", e);
         reply(`Error: ${e.message}`);
-    }
-});
-
-// Original ping command (keeping it as requested)
-cmd({
-    pattern: "ping",
-    alias: ["speed","pong"],
-    use: '.ping',
-    desc: "Check bot's response time.",
-    category: "main",
-    react: "⚡",
-    filename: __filename
-},
-async (conn, mek, m, { from, quoted, sender, reply }) => {
-    try {
-        const start = new Date().getTime();
-
-        const reactionEmojis = ['🔥', '⚡', '🚀', '💨', '🎯', '🎉', '🌟', '💥', '🕐', '🔹'];
-        const textEmojis = ['💎', '🏆', '⚡️', '🚀', '🎶', '🌠', '🌀', '🔱', '🛡️', '✨'];
-
-        const reactionEmoji = reactionEmojis[Math.floor(Math.random() * reactionEmojis.length)];
-        let textEmoji = textEmojis[Math.floor(Math.random() * textEmojis.length)];
-
-        // Ensure reaction and text emojis are different
-        while (textEmoji === reactionEmoji) {
-            textEmoji = textEmojis[Math.floor(Math.random() * textEmojis.length)];
-        }
-
-        // Send reaction using conn.sendMessage()
-        await conn.sendMessage(from, {
-            react: { text: textEmoji, key: mek.key }
-        });
-
-        const end = new Date().getTime();
-        const responseTime = (end - start) / 1000;
-
-        const text = `> *D-XTRO-MD SPEED: ${responseTime.toFixed(2)}ms ${reactionEmoji}*`;
-
-        await conn.sendMessage(from, {
-            text,
-            contextInfo: {
-                mentionedJid: [sender],
-                forwardingScore: 999,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363354023102228@newsletter',
-                    newsletterName: "ᴍʀ ᴅɪɴᴇꜱʜ ᴏꜰᴄ",
-                    serverMessageId: 143
-                }
-            }
-        }, { quoted: mek });
-
-    } catch (e) {
-        console.error("Error in ping command:", e);
-        reply(`An error occurred: ${e.message}`);
-    }
-});
-
-// ping2 command (keeping it as requested)
-cmd({
-    pattern: "ping2",
-    desc: "Check bot's response time.",
-    category: "main",
-    react: "🍂",
-    filename: __filename
-},
-async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
-    try {
-        const startTime = Date.now()
-        const message = await conn.sendMessage(from, { text: '*PINGING...*' })
-        const endTime = Date.now()
-        const ping = endTime - startTime
-        await conn.sendMessage(from, { text: `*🔥D-XTRO-MD SPEED : ${ping}ms*` }, { quoted: message })
-    } catch (e) {
-        console.log(e)
-        reply(`${e}`)
     }
 });
