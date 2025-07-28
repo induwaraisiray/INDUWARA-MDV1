@@ -7,53 +7,29 @@ cmd({
     alias: ["status", "runtime", "uptime"],
     desc: "Check uptime and system status",
     category: "main",
-    react: "📟",
+    react: "👋",
     filename: __filename
 },
 async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
     try {
-        // System status message
-        const status = `╭━━〔 *D-XTRO-MD* 〕━━┈⊷
-┃◈╭─────────────·๏
-┃◈┃• *⏳Uptime*:  ${runtime(process.uptime())} 
-┃◈┃• *📟 Ram usage*: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}MB / ${(os.totalmem() / 1024 / 1024).toFixed(2)}MB
-┃◈┃• *⚙️ HostName*: ${os.hostname()}
-┃◈┃• *👨‍💻 Owner*: ᴍʀ ᴅɪɴᴇꜱʜ
-┃◈┃• *🧬 Version*: V2 BETA
-┃◈└───────────┈⊷
+        const status = ` *Hello ${pushname}, Im INDUWARA-MD👾*
+        
+╭━━━━━━━━━━━━━━┈⊷
+┃ *⏳ Uptime*:  ${runtime(process.uptime())} 
+┃ *📈 CPU Load*: ${os.loadavg()[0].toFixed(2)} (1 min avg)
+┃ *📟 Ram usage*: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}MB / ${(os.totalmem() / 1024 / 1024).toFixed(2)}MB
+┃ *⚙️ HostName*: ${os.hostname()}
+┃ *👨‍💻 Owner*: isira induwara
+┃ *🧬 Version*: V1 
 ╰──────────────┈⊷
 
-  𝐪𝐮𝐞𝐞𝐧 𝐬𝐚𝐝𝐮 programing.𝐢𝐦 𝐚𝐥𝐢𝐯𝐞 𝐧𝐨𝐰. 
+ https://whatsapp.com/channel/0029Vb6FspM6RGJNsF4Sfs31
 
-  https://whatsapp.com/channel/0029Vb0Anqe9RZAcEYc2fT2c
+> © ᴘᴏᴡᴇʀᴇᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ 〽️ᴅ`;
 
-> © ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴍʀ ᴅɪɴᴇꜱʜ`;
-
-        // Voice message URL (PTT voice message)
-        const voiceUrl = 'https://files.catbox.moe/5cs6nk.mp3';
-
-        // 1. Send PTT Voice First (With Channel View Link)
-        const voiceMessage = await conn.sendMessage(from, {
-            audio: { url: voiceUrl },
-            mimetype: 'audio/mpeg',
-            ptt: true, // Send as voice message (PTT)
-            contextInfo: {
-                forwardingScore: 999,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363357105376275@g.us@newsletter',
-                    newsletterName: 'ᴍʀ ᴅɪɴᴇꜱʜ',
-                    serverMessageId: 143
-                }
-            }
-        }, { quoted: mek });
-
-        // Wait for 2 seconds before sending image + text
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // 2. Send Image + Caption After Voice
+        // Send only image with caption (no voice)
         await conn.sendMessage(from, {
-            image: { url: `https://i.postimg.cc/44vBQhjF/IMG-20250206-224743.jpg` }, // Image URL
+            image: { url: `https://i.ibb.co/srSNWLW/w-Clr-IIGJFm.jpg` },
             caption: status,
             contextInfo: {
                 mentionedJid: [m.sender],
@@ -61,11 +37,11 @@ async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sen
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
                     newsletterJid: '120363357105376275@g.us@newsletter',
-                    newsletterName: 'ᴍʀ ᴅɪɴᴇꜱʜ',
+                    newsletterName: 'INDUWARA-MD',
                     serverMessageId: 143
                 }
             }
-        }, { quoted: voiceMessage });
+        }, { quoted: mek });
 
     } catch (e) {
         console.error("Error in alive command:", e);
