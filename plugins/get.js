@@ -126,38 +126,41 @@ cmd({
   category: "owner",
   use: ".getpp <phone number>",
   filename: __filename
-}, async (conn, mek, m, { from, args, isOwner, reply }) => {
+}, async (darknero, match, me, { text }) => {
   try {
-    if (!isOwner) return reply("🛑 This command is only for the bot owner!");
-    if (!args[0]) return reply("🔥 Please provide a phone number (e.g., .getpp 1234567890)");
+    if (!text) return match.reply("🔥 Please provide a phone number (e.g., .getpp 1234567890)");
 
-    let targetJid = args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
+    const targetJid = text.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
 
     let ppUrl;
     try {
-      ppUrl = await conn.profilePictureUrl(targetJid, "image");
-    } catch {
-      return reply("🖼️ This user has no profile picture or it cannot be accessed!");
+      ppUrl = await darknero.profilePictureUrl(targetJid, "image");
+    } catch (e) {
+      return match.reply("🖼️ This user has no profile picture or it cannot be accessed!");
     }
 
     let userName = targetJid.split("@")[0];
     try {
-      const contact = await conn.getContact(targetJid);
-      userName = contact.notify || contact.vname || userName;
-    } catch {}
+      const contact = await darknero.onWhatsApp(targetJid);
+      userName = contact?.[0]?.notify || contact?.[0]?.vname || userName;
+    } catch (e) {
+      // fallback name used
+    }
 
-    await conn.sendMessage(from, {
+    await darknero.sendMessage(match.chat, {
       image: { url: ppUrl },
-      caption: `📌 Profile picture of ${userName}`
+      caption: `📌 Profile picture of +${userName}`
+    }, { quoted: match });
+
+    await darknero.sendMessage(match.chat, {
+      react: { text: "✅", key: match.key }
     });
 
-    await conn.sendMessage(from, { react: { text: "✅", key: mek.key } });
   } catch (e) {
-    reply("🛑 An error occurred while fetching the profile picture!");
-    console.log(e);
+    console.error("PP Fetch Error:", e);
+    match.reply("🛑 An error occurred while fetching the profile picture!");
   }
 });
-
 // send/save status command
 cmd({
   pattern: "send",
