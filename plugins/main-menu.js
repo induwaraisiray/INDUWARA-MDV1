@@ -30,7 +30,6 @@ async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sen
 ╭──────────·๏
 ┃ alive
 ┃ ping
-┃ ping2
 ┃ restart 
 ┃ song
 ┃ setting
@@ -38,6 +37,7 @@ async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sen
 ┃ vv2 (❤️,😇,💔,🙂,😂)
 ┃ ytsearch
 ┃ system 
+┃ autonews
 ╰━━━━━━━━━━┈⊷
 > © ᴘᴏᴡᴇʀᴇᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ 〽️ᴅ`;
 
