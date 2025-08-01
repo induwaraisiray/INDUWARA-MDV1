@@ -4,7 +4,7 @@ const axios = require('axios');
 const { fetchJson } = require('../lib/functions');
 
 const apilink = 'https://nethu-api.vercel.app/news';
-let wm = '> *𝐏𝐎𝐖𝐄𝐑𝐄𝐃 𝐁𝐘 𝐌𝐑𝐃 𝐀𝐈*';
+let wm = '> ɪɴᴅᴜᴡᴀʀᴀ 〽️ꜰ';
 let latestNews = {};
 let newsInterval = null;
 let alertEnabled = false;
