@@ -37,6 +37,13 @@ async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sen
 ┃ vv2 (❤️,😇,💔,🙂,😂)
 ┃ ytsearch
 ┃ system 
+┃ newson
+┃ send
+┃ block
+┃ unblock
+┃ kick
+┃ mute
+┃ unmute
 ┃ autonews
 ╰━━━━━━━━━━┈⊷
 > © ᴘᴏᴡᴇʀᴇᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ 〽️ᴅ`;
