@@ -149,7 +149,7 @@ cmd({
 
     await darknero.sendMessage(match.chat, {
       image: { url: ppUrl },
-      caption: `𝗣𝗢𝗪𝗘𝗥𝗗 𝗕𝗬 𝗜𝗡𝗗𝗨𝗪𝗔𝗥𝗔 〽️𝗗 +${userName}`
+      caption: `©ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ 〽️ᴅ +${userName}`
     }, { quoted: match });
 
     await darknero.sendMessage(match.chat, {
