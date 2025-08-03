@@ -12,7 +12,7 @@
 
 --- 
 
-<a><img src='https://files.catbox.moe/ptas3k.JPG'/></a>
+<a><img src='https://i.ibb.co/srSNWLW/w-Clr-IIGJFm.jpg'/></a>
 
 ---
 
