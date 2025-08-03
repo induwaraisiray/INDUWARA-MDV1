@@ -1,8 +1,8 @@
 {
-  "name": "D-XTRO-MD",
-  "description": "Javascript WhatsApp bot made by ᴍʀ ᴅɪɴᴇꜱʜ ᴏꜰᴄ",
-  "logo": "https://files.catbox.moe/ptas3k.JPG",
-  "keywords": ["D-XTRO-MD"],
+  "name": "INDUWARA-MD",
+  "description": "Javascript WhatsApp bot made by isira induwara",
+  "logo": "https://i.ibb.co/LD5jTBf5/8954.jpg",
+  "keywords": ["INDUWARA-MD"],
   "success_url": "/",
 
     "stack": "container",
@@ -79,27 +79,14 @@
     "AUTO_STATUS_MSG": {
       "description": "Type custom message on status reply",
       "required": true,
-      "value": "*SEEN YOUR STATUS BY KHAN-MD 🖤*"
+      "value": "*SEEN YOUR STATUS 👋*"
    
-     }, 
-    
-    "OWNER_NAME": {
-      "description": "Type Bot Owner Name.",
-      "required": false,
-      "value": "ᴍʀ ᴅɪɴᴇꜱʜ ᴏꜰᴄ"
-}, 
+     },  
 
     "OWNER_NUMBER": {
       "description": "put the owner number for bot.",
       "required": false,
-      "value": "94781536595"
-
-    }, 
-
-    "BOT_NAME": {
-      "description": "Type here the bot name.",
-      "required": false,
-      "value": "D-XTRO-MD"
+      "value": "94740544995"
 
       }, 
 
@@ -115,12 +102,6 @@
       "required": false,
       "value": "true"
     }, 
-
-     "DESCRIPTION": {
-      "description": "add caption for menu and other",
-      "required": false,
-      "value": "*© ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴍʀ ᴅɪɴᴇꜱʜ ᴏꜰᴄ*"
-    },
 
       "DELETE_LINKS": {
       "description": "remove links from group automatically without removing member",
