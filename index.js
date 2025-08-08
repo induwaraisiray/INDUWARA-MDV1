@@ -268,27 +268,6 @@ const port = process.env.PORT || 9090;
           m.react(randomOwnerReaction);
       }
   }
-          
-// custum react settings        
-                        
-if (!isReact && senderNumber !== botNumber) {
-    if (config.CUSTOM_REACT === 'true') {
-        // Use custom emojis from the configuration
-        const reactions = (config.CUSTOM_REACT_EMOJIS || '🥲,😂,👍🏻,🙂,😔').split(',');
-        const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
-        m.react(randomReaction);
-    }
-}
-
-if (!isReact && senderNumber === botNumber) {
-    if (config.CUSTOM_REACT === 'true') {
-        // Use custom emojis from the configuration
-        const reactions = (config.CUSTOM_REACT_EMOJIS || '🥲,😂,👍🏻,🙂,😔').split(',');
-        const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
-        m.react(randomReaction);
-    }
-} 
-        
   //==========WORKTYPE============ 
   if(!isOwner && config.MODE === "private") return
   if(!isOwner && isGroup && config.MODE === "inbox") return
