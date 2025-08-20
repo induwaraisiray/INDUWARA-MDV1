@@ -12,8 +12,9 @@
     "@whiskeysockets/baileys": "6.7.18",
     "@adiwajshing/keyed-db": "^0.2.4",
     "@dark-yasiya/yt-dl.js": "latest",
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffmpeg-installer/ffmpeg": "latest",
     "@vitalets/google-translate-api": "^9.2.1",
+    "fluent-ffmpeg": "latest"
     "pino": "9.7.0",
     "pm2": "6.0.8",
     "util": "^0.12.5",
