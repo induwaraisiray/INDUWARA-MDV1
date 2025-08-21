@@ -1,5 +1,6 @@
-const axios = require("axios");
-const { cmd, yts } = require("../lib");
+const config = require('../config');
+const { cmd } = require('../command');
+const yts = require('yt-search');
 
 // 🎧 SONG COMMAND
 cmd(
