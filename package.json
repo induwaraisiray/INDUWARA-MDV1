@@ -12,6 +12,7 @@
     "@whiskeysockets/baileys": "6.7.18",
     "@adiwajshing/keyed-db": "^0.2.4",
     "@dark-yasiya/yt-dl.js": "latest",
+    "@dark-yasiya/scrap": "latest",
     "@ffmpeg-installer/ffmpeg": "latest",
     "@vitalets/google-translate-api": "^9.2.1",
     "fluent-ffmpeg": "2.1.2",
