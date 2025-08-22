@@ -78,7 +78,7 @@ cmd({
         } else {
             // Search YouTube
             const search = await yts(q);
-            if (!search.videos.length) return await reply("*❌ No results found!"*);
+            if (!search.videos.length) return await reply("*❌ No results found!*");
             videoUrl = search.videos[0].url;
             title = search.videos[0].title;
         }
