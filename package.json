@@ -43,6 +43,7 @@
     "sequelize": "^6.37.5",
     "sqlite3": "^5.1.7",
     "api-dylux": "1.8.5",
+    "mime-types": "latest",
     "@mrnima/tiktok-downloader": "1.0.0",
     "@mrnima/facebook-downloader": "1.0.0",
     "mrnima-moviedl": "1.0.0",
