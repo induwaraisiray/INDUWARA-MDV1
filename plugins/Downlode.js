@@ -518,62 +518,7 @@ cmd(
 );
 
 /* ======================= MEDIAFIRE DOWNLOADER ======================= */
-cmd(
-  {
-    pattern: "mediafire",
-    alias: ["mfire"],
-    desc: "To download MediaFire files.",
-    react: "🎥",
-    category: "download",
-    filename: __filename,
-  },
-  async (conn, mek, m, { from, q, reply }) => {
-    try {
-      if (!isHttpUrl(q)) {
-        return reply("*❌ Please provide a valid MediaFire link.*");
-      }
 
-      await conn.sendMessage(from, { react: { text: "⏳", key: mek.key } });
-
-      const { data } = await axios.get(
-        `https://www.dark-yasiya-api.site/download/mfire?url=${encodeURIComponent(
-          q
-        )}`
-      );
-
-      const r = data?.result || {};
-      if (!data?.status || !isHttpUrl(r?.dl_link)) {
-        return reply(
-          "*⚠️ Failed to fetch MediaFire download link. Ensure the link is valid and public.*"
-        );
-      }
-
-      const file_name = r.fileName || "mediafire_download";
-      const mime_type = r.fileType || "application/octet-stream";
-
-      await conn.sendMessage(from, { react: { text: "⬆️", key: mek.key } });
-
-      const caption =
-        `╭━━━〔 *MEDIAFIRE DOWNLOADER* 〕━━━⊷\n` +
-        `┃▸ *File Name:* ${file_name}\n` +
-        `┃▸ *File Type:* ${mime_type}\n` +
-        `╰━━━⪼\n\n` +
-        `📥 *Downloading your file...*`;
-
-      await conn.sendMessage(
-        from,
-        {
-          document: { url: r.dl_link, mimetype: mime_type, fileName: file_name },
-          caption,
-        },
-        { quoted: mek }
-      );
-    } catch (error) {
-      console.error("mediafire:", error);
-      reply("❌ An error occurred while processing your request. Please try again.");
-    }
-  }
-);
 
 /* ======================= APK DOWNLOADER ======================= */
 cmd(
