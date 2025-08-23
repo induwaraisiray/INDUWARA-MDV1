@@ -1,4 +1,4 @@
-// mediafire.js
+const { cmd } = require('../command');
 const axios = require("axios");
 const mime = require("mime-types");
 
@@ -29,7 +29,8 @@ cmd(
       // 2. Extract info
       const fileName =
         data?.data?.filename || data?.filename || "mediafire-file";
-      const fileSize = data?.data?.size || data?.size || "unknown";
+      const fileSize =
+        data?.data?.size || data?.size || "unknown";
       const directLink =
         data?.data?.link || data?.data?.direct || data?.direct || data?.url;
 
@@ -65,14 +66,15 @@ cmd(
         });
       }
 
-      // 5. Download + send file as document
-      const response = await axios.get(directLink, { responseType: "stream" });
+      // 5. Download + send file as document (FIXED)
+      const response = await axios.get(directLink, { responseType: "arraybuffer" });
+      const buffer = Buffer.from(response.data, "binary");
       const mimeType = mime.lookup(fileName) || "application/octet-stream";
 
       await conn.sendMessage(
         m.chat,
         {
-          document: response.data,
+          document: buffer,
           fileName: fileName,
           mimetype: mimeType,
           caption:
