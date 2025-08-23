@@ -10,12 +10,12 @@ function replaceYouTubeID(url) {
 }
 
 cmd({
-    pattern: "song1",
+    pattern: "play3",
     alias: ["mp3", "ytmp3"],
     react: "🎵",
     desc: "Download Ytmp3",
     category: "download",
-    use: ".song1 <Text or YT URL>",
+    use: ".song <Text or YT URL>",
     filename: __filename
 }, async (conn, m, mek, { from, q, reply }) => {
     try {
@@ -70,15 +70,15 @@ cmd({
                 let response;
                 
                 if (userReply === "1.1") {
-                    msg = await conn.sendMessage(from, { react: { text: "⬇️", key: mek.key } });
+                    msg = await conn.sendMessage(from, { text: "*⬆️ You request submit...*" }, { quoted: mek });
                     response = await dy_scrap.ytmp3(`https://youtube.com/watch?v=${id}`);
                     let downloadUrl = response?.result?.download?.url;
                     if (!downloadUrl) return await reply("❌ Download link not found!");
                     type = { audio: { url: downloadUrl }, mimetype: "audio/mpeg" };
                     
                 } else if (userReply === "1.2") {
-                    msg = await conn.sendMessage(from, { react: { text: "⬇️", key: mek.key } });
-                    response = await dy_scrap.ytmp3(`https://youtube.com/watch?v=${id}`);
+                    msg = await conn.sendMessage(from, { text: "*⬆️ You request submit...*" }, { quoted: mek });
+                    const response = await dy_scrap.ytmp3(`https://youtube.com/watch?v=${id}`);
                     let downloadUrl = response?.result?.download?.url;
                     if (!downloadUrl) return await reply("❌ Download link not found!");
                     type = { document: { url: downloadUrl }, fileName: `${title}.mp3`, mimetype: "audio/mpeg", caption: title };
@@ -88,7 +88,7 @@ cmd({
                 }
 
                 await conn.sendMessage(from, type, { quoted: mek });
-                await conn.sendMessage(from, { react: { text: '✅', key: msg.key } });
+                await conn.sendMessage(from, { text: '*✅ media upload successful.*', edit: msg.key });
 
             } catch (error) {
                 console.error(error);
@@ -102,3 +102,5 @@ cmd({
         await reply(`❌ *An error occurred:* ${error.message || "Error!"}`);
     }
 });
+
+          
