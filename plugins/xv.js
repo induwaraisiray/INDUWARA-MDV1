@@ -5,9 +5,9 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 cmd({
-    pattern: "xxv",
+    pattern: "xvid",
     alias: ["xvideo"],
-    use: '.xxv <query>',
+    use: '.xvid <query>',
     react: "🔞",
     desc: "xvideo download",
     category: "download",
@@ -32,7 +32,7 @@ cmd({
         });
         
         message += options;
-        message += `> *© •ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ•*`;
+        message += `> ⚜️ _𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐝_ *- :* *_SL NETHU MAX_ ᵀᴹ*\n\n`;
 
         const sentMessage = await messageHandler.sendMessage(from, {
             image: { url: `https://i.ibb.co/ntvzPr8/s-Wuxk4b-KHr.jpg` },
@@ -74,7 +74,7 @@ cmd({
 
                     await messageHandler.sendMessage(from, {
                         video: { url: videoUrl },
-                        caption: `${selectedVideo.title}\n\n> > *© •ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ•*`
+                        caption: `${selectedVideo.title}\n\n> ⚜️ _𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐝_ *- :* *_SL NETHU MAX_ ᵀᴹ*`
                     });
 
                 } catch (err) {
