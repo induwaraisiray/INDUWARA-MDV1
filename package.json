@@ -20,7 +20,7 @@
     "pm2": "6.0.8",
     "util": "^0.12.5",
     "express": "^4.19.2",
-    "axios": "1.10.0",
+    "axios": "latest",
     "crypto-digest-sync": "^1.0.0",
     "cheerio": "^1.0.0-rc.12",
     "crypto-js": "latest",
