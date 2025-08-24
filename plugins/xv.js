@@ -1,95 +1,188 @@
-const config = require('../config');
-const {cmd , commands} = require('../command');
-const { fetchJson } = require('../lib/functions')
-const axios = require('axios');
-const cheerio = require('cheerio');
+const { cmd } = require('../command');
+const axios = require("axios");
 
 cmd({
-    pattern: "xvid",
-    alias: ["xvideo"],
-    use: '.xvid <query>',
-    react: "🔞",
-    desc: "xvideo download",
-    category: "download",
-    filename: __filename
-}, async (messageHandler, context, quotedMessage, { from, q, reply }) => {
-    try {
-        if (!q) return reply('⭕ *Please Provide Search Terms.*');
+  pattern: "xnxx",
+  desc: "XNXX Search and Download",
+  category: "download",
+  use: ".xnxx <query>",
+  react: "🔞",
+}, async (darknero, match, m, { text }) => {
+  if (!text) {
+    return match.reply("🔍 Enter a search term!\n\n*Example:* `.xnxx hot`");
+  }
 
-        let res = await fetchJson(`https://raganork-network.vercel.app/api/xvideos/search?query=${q}`);
-        
-        if (!res || !res.result || res.result.length === 0) return reply("N_FOUND");
+  try {
+    // Step 1: Search video from API
+    const search = await axios.get(
+      "https://api.vreden.my.id/api/xnxxsearch?query=" + encodeURIComponent(text)
+    );
 
-        const data = res.result.slice(0, 10);
-        
-        if (data.length < 1) return await messageHandler.sendMessage(from, { text: "⭕ *I Couldn't Find Anything 🙄*" }, { quoted: quotedMessage });
-
-        let message = `*🔞 INDUWARA MD XVIDEO DOWNLOADER 🔞*\n\n`;
-        let options = '';
-
-        data.forEach((v, index) => {
-            options += `${index + 1}. *${v.title}*\n\n`;
-        });
-        
-        message += options;
-        message += `> ⚜️ _𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐝_ *- :* *_SL NETHU MAX_ ᵀᴹ*\n\n`;
-
-        const sentMessage = await messageHandler.sendMessage(from, {
-            image: { url: `https://i.ibb.co/ntvzPr8/s-Wuxk4b-KHr.jpg` },
-            caption: message
-        }, { quoted: quotedMessage });
-
-        session[from] = {
-            searchResults: data,
-            messageId: sentMessage.key.id,
-        };
-
-        const handleUserReply = async (update) => {
-            const userMessage = update.messages[0];
-
-            if (!userMessage.message.extendedTextMessage ||
-                userMessage.message.extendedTextMessage.contextInfo.stanzaId !== sentMessage.key.id) {
-                return;
-            }
-
-            const userReply = userMessage.message.extendedTextMessage.text.trim();
-            const videoIndexes = userReply.split(',').map(x => parseInt(x.trim()) - 1);
-
-            for (let index of videoIndexes) {
-                if (isNaN(index) || index < 0 || index >= data.length) {
-                    return reply("⭕ *Please Enter Valid Numbers From The List.*");
-                }
-            }
-
-            for (let index of videoIndexes) {
-                const selectedVideo = data[index];
-
-                try {
-                    let downloadRes = await fetchJson(`https://raganork-network.vercel.app/api/xvideos/download?url=${selectedVideo.url}`);
-                    let videoUrl = downloadRes.url;
-
-                    if (!videoUrl) {
-                        return reply(`⭕ *Failed To Fetch Video* for "${selectedVideo.title}".`);
-                    }
-
-                    await messageHandler.sendMessage(from, {
-                        video: { url: videoUrl },
-                        caption: `${selectedVideo.title}\n\n> ⚜️ _𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐝_ *- :* *_SL NETHU MAX_ ᵀᴹ*`
-                    });
-
-                } catch (err) {
-                    console.error(err);
-                    return reply(`⭕ *An Error Occurred While Downloading "${selectedVideo.title}".*`);
-                }
-            }
-
-            delete session[from];
-        };
-
-        messageHandler.ev.on("messages.upsert", handleUserReply);
-
-    } catch (error) {
-        console.error(error);
-        await messageHandler.sendMessage(from, { text: '⭕ *Error Occurred During The Process!*' }, { quoted: quotedMessage });
+    const result = search.data?.result?.[0];
+    if (!result) {
+      return match.reply("❌ No results found.");
     }
+
+    // Step 2: Get download link
+    const download = await axios.get(
+      "https://api.vreden.my.id/api/xnxxdl?query=" + encodeURIComponent(result.link)
+    );
+
+    const video = download.data?.result;
+    if (!video?.files?.high) {
+      return match.reply("⚠️ Could not get download link.");
+    }
+
+    // Step 3: Send video thumbnail & info
+    await darknero.sendMessage(
+      m.chat,
+      {
+        image: { url: video.image },
+        caption:
+          `🔞 *${video.title}*\n\n🎞️ Duration: *${video.duration}s*\n\n` +
+          `> *•ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ•*`
+      },
+      { quoted: m }
+    );
+
+    // Step 4: Send video
+    await darknero.sendMessage(
+      m.chat,
+      {
+        video: { url: video.files.high },
+        mimetype: "video/mp4",
+        caption: "*DONE...✅*",
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          externalAdReply: {
+            title: video.title.trim(),
+            body: "*•ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ•*",
+            mediaType: 1,
+            previewType: 0,
+            renderLargerThumbnail: true,
+            thumbnailUrl: video.image,
+            sourceUrl: result.link,
+            mediaUrl: result.link,
+            showAdAttribution: true,
+          }
+        }
+      },
+      { quoted: m }
+    );
+
+  } catch (err) {
+    console.error(err);
+    match.reply("❌ Error occurred while fetching the video.");
+  }
+});
+
+
+// 🔞 XNXX Search Command
+cmd({
+  pattern: "xnxxm",
+  desc: "XNXXm Search and Download",
+  category: "download",
+  use: ".xnxxm <query>",
+  react: "🔞",
+}, async (darknero, match, m, { text }) => {
+  if (!text) {
+    return match.reply("🔍 Search term එකක් දාන්න!\n\n*උදා:* `.xnxx hot`");
+  }
+
+  try {
+    // Step 1: Search
+    const search = await axios.get(
+      "https://api.vreden.my.id/api/xnxxsearch?query=" + encodeURIComponent(text)
+    );
+
+    const results = search.data?.result;
+    if (!results || results.length === 0) {
+      return match.reply("❌ Results නැහැ!");
+    }
+
+    // Step 2: Build Menu (Top 10 results)
+    let menu = `🔞 *XNXX Search Results*\n\n`;
+    results.slice(0, 10).forEach((vid, i) => {
+      menu += `*${i + 1}.* ${vid.title}\n`;
+      if (vid.duration) menu += `   ⏱️ Duration: ${vid.duration}\n`;
+      if (vid.views) menu += `   👁️ Views: ${vid.views}\n`;
+      if (vid.quality) menu += `   🎞️ Quality: ${vid.quality}\n`;
+      if (vid.tags) menu += `   🏷️ Tags: ${vid.tags.join(", ")}\n`;
+      menu += `   🔗 ${vid.link}\n\n`;
+    });
+
+    menu += `➡️ Reply with a *number (1-${Math.min(10, results.length)})* to download.`;
+
+    // Save results for reply (cache per user)
+    global.xnxxCache = global.xnxxCache || {};
+    global.xnxxCache[m.sender] = results.slice(0, 10);
+
+    await match.reply(menu);
+
+  } catch (err) {
+    console.error(err);
+    match.reply("❌ Error occurred while fetching search results.");
+  }
+});
+
+// 🔽 Number reply handler (Download Selected Video)
+cmd({
+  on: "text"
+}, async (darknero, match, m, { body }) => {
+  if (!global.xnxxCache) return;
+  const videos = global.xnxxCache[m.sender];
+  if (!videos) return;
+
+  const choice = parseInt(body.trim());
+  if (isNaN(choice) || choice < 1 || choice > videos.length) return;
+
+  const selected = videos[choice - 1];
+
+  try {
+    // Step 3: Get download info
+    const download = await axios.get(
+      "https://api.vreden.my.id/api/xnxxdl?query=" + encodeURIComponent(selected.link)
+    );
+
+    const video = download.data?.result;
+    if (!video?.files?.high) {
+      return match.reply("⚠️ Could not get download link.");
+    }
+
+    // Step 4: Send details (with thumbnail)
+    await darknero.sendMessage(
+      m.chat,
+      {
+        image: { url: video.image },
+        caption: 
+          `🔞 *${video.title}*\n\n` +
+          `⏱️ Duration: *${video.duration}*\n` +
+          (video.views ? `👁️ Views: *${video.views}*\n` : "") +
+          (video.quality ? `🎞️ Quality: *${video.quality}*\n` : "") +
+          (video.tags ? `🏷️ Tags: *${video.tags.join(", ")}*\n` : "") +
+          `\n➡️ Source: ${selected.link}\n\n` +
+          `> *•ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ•*`
+      },
+      { quoted: m }
+    );
+
+    // Step 5: Send video
+    await darknero.sendMessage(
+      m.chat,
+      {
+        video: { url: video.files.high },
+        mimetype: "video/mp4",
+        caption: "*DONE...✅*"
+      },
+      { quoted: m }
+    );
+
+    // Clear cache for this user
+    delete global.xnxxCache[m.sender];
+
+  } catch (err) {
+    console.error(err);
+    match.reply("❌ Error occurred while downloading video.");
+  }
 });
