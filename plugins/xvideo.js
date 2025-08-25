@@ -1,5 +1,5 @@
 const config = require('../config');
-const {cmd , commands} = require('../command');
+const { cmd , commands } = require('../command');
 const { fetchJson } = require('../lib/functions')
 
 cmd({
@@ -16,7 +16,7 @@ cmd({
 
         // SEARCH API
         let res = await fetchJson(`https://api.vreden.my.id/api/xnxxsearch?query=${q}`);
-        console.log(res); // Debugging (structure balanna)
+        console.log("SEARCH API Response:", res);
 
         if (!res || !res.result || res.result.length === 0) {
             return reply("⭕ *I Couldn't Find Anything 🙄*");
@@ -66,8 +66,10 @@ cmd({
 
                 try {
                     // DOWNLOAD API
-                    let downloadRes = await fetchJson(`https://api.vreden.my.id/api/xnxxdl?query=${selectedVideo.link}`);
-                    let videoUrl = downloadRes.result?.files?.high || downloadRes.result?.files?.low;
+                    let downloadRes = await fetchJson(`https://api.vreden.my.id/api/xnxxdl?qurey=${selectedVideo.url}`);
+                    console.log("DOWNLOAD API Response:", downloadRes);
+
+                    let videoUrl = downloadRes?.result?.files?.high || downloadRes?.result?.files?.low;
 
                     if (!videoUrl) {
                         return reply(`⭕ *Failed To Fetch Video* for "${selectedVideo.title}".`);
@@ -75,11 +77,11 @@ cmd({
 
                     await messageHandler.sendMessage(from, {
                         video: { url: videoUrl },
-                        caption: `${selectedVideo.title}\n\n> ⚜️ _𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐝_ *- :* *_SL NETHU MAX_ ᵀᴹ*`
+                        caption: `${downloadRes.result.title}\n\n> ⚜️ _𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐝_ *- :* *_SL NETHU MAX_ ᵀᴹ*`
                     });
 
                 } catch (err) {
-                    console.error(err);
+                    console.error("Download Error:", err);
                     return reply(`⭕ *An Error Occurred While Downloading "${selectedVideo.title}".*`);
                 }
             }
