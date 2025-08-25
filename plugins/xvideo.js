@@ -1,36 +1,36 @@
 const config = require('../config');
 const {cmd , commands} = require('../command');
 const { fetchJson } = require('../lib/functions')
-const axios = require('axios');
-const cheerio = require('cheerio');
 
 cmd({
     pattern: "xvid",
     alias: ["xvideo"],
     use: '.xvid <query>',
     react: "🔞",
-    desc: "xvideo download",
+    desc: "xnxx video search & download",
     category: "download",
     filename: __filename
 }, async (messageHandler, context, quotedMessage, { from, q, reply }) => {
     try {
         if (!q) return reply('⭕ *Please Provide Search Terms.*');
 
-        let res = await fetchJson(`https://raganork-network.vercel.app/api/xvideos/search?query=${q}`);
-        
-        if (!res || !res.result || res.result.length === 0) return reply("N_FOUND");
+        // SEARCH API
+        let res = await fetchJson(`https://api.vreden.my.id/api/xnxxsearch?query=${q}`);
+        console.log(res); // Debugging (structure balanna)
+
+        if (!res || !res.result || res.result.length === 0) {
+            return reply("⭕ *I Couldn't Find Anything 🙄*");
+        }
 
         const data = res.result.slice(0, 10);
-        
-        if (data.length < 1) return await messageHandler.sendMessage(from, { text: "⭕ *I Couldn't Find Anything 🙄*" }, { quoted: quotedMessage });
 
-        let message = `*🔞 QUEEN NETHU MD XVIDEO DOWNLOADER 🔞*\n\n`;
+        let message = `*🔞 QUEEN NETHU MD XNXX DOWNLOADER 🔞*\n\n`;
         let options = '';
 
         data.forEach((v, index) => {
             options += `${index + 1}. *${v.title}*\n\n`;
         });
-        
+
         message += options;
         message += `> ⚜️ _𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐝_ *- :* *_SL NETHU MAX_ ᵀᴹ*\n\n`;
 
@@ -65,8 +65,9 @@ cmd({
                 const selectedVideo = data[index];
 
                 try {
-                    let downloadRes = await fetchJson(`https://raganork-network.vercel.app/api/xvideos/download?url=${selectedVideo.url}`);
-                    let videoUrl = downloadRes.url;
+                    // DOWNLOAD API
+                    let downloadRes = await fetchJson(`https://api.vreden.my.id/api/xnxxdl?query=${selectedVideo.link}`);
+                    let videoUrl = downloadRes.result?.files?.high || downloadRes.result?.files?.low;
 
                     if (!videoUrl) {
                         return reply(`⭕ *Failed To Fetch Video* for "${selectedVideo.title}".`);
