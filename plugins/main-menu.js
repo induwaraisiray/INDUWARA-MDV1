@@ -34,29 +34,27 @@ cmd({
 ╰━━━━━━━━━━━━●●►
 > *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`;
 
+        // Context info (mentions only)
         const contextInfo = {
             mentionedJid: [mek.sender],
             forwardingScore: 999,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-                newsletterJid: '120363357105376275@g.us@newsletter',
-                newsletterName: "INDUWARA-MD",
-                serverMessageId: 143
-            }
+            isForwarded: true
         };
 
+        // Function to send menu (image fallback -> text)
         const sendMenuImage = async () => {
             try {
                 return await conn.sendMessage(
                     from,
                     {
-                        image: { url: `https://i.ibb.co/Zp6zsyFs/2483.jpg` },
+                        image: { url: "https://i.ibb.co/Zp6zsyF/2483.jpg" }, // check link
                         caption: menuCaption,
                         contextInfo
                     },
                     { quoted: mek }
                 );
-            } catch {
+            } catch (err) {
+                console.error("Image menu error:", err.message);
                 return await conn.sendMessage(
                     from,
                     { text: menuCaption, contextInfo },
@@ -81,11 +79,9 @@ cmd({
 
         const messageID = sentMsg.key.id;
 
+        // Menu data (options)
         const menuData = {
-            '1': {
-                title: "📥 *Download Menu*",
-                content: `╭📥 *DOWNLOAD COMMANDS*
-╭─────────────┈⊷
+            '1': { title: "📥 *Download Menu*", content: `╭📥 *DOWNLOAD COMMANDS*
 ┃ facebook
 ┃ img
 ┃ ringtone
@@ -103,13 +99,9 @@ cmd({
 ┃ video
 ┃ mp4
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`,
-                image: true
-            },
-            '2': {
-                title: "👥 *Group Menu*",
-                content: `╭👥 *GROUP COMMANDS*
-╭─────────────┈⊷
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+
+            '2': { title: "👥 *Group Menu*", content: `╭👥 *GROUP COMMANDS*
 ┃ join <link>
 ┃ invite
 ┃ revoke
@@ -122,13 +114,9 @@ cmd({
 ┃ mute
 ┃ unmute
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`,
-                image: true
-            },
-            '3': {
-                title: "🔍 *Search Menu*",
-                content: `╭🔍 *SEARCH COMMANDS*
-╭─────────────┈⊷
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+
+            '3': { title: "🔍 *Search Menu*", content: `╭🔍 *SEARCH COMMANDS*
 ┃ npm
 ┃ yts
 ┃ ytinfo
@@ -136,13 +124,9 @@ cmd({
 ┃ xstalk
 ┃ whether
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`,
-                image: true
-            },
-            '4': {
-                title: "🔗 *Tools Menu*",
-                content: `╭🔗 *TOOLS COMMANDS*
-╭─────────────┈⊷
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+
+            '4': { title: "🔗 *Tools Menu*", content: `╭🔗 *TOOLS COMMANDS*
 ┃ cinfo
 ┃ tourl
 ┃ aivoice
@@ -152,26 +136,18 @@ cmd({
 ┃ genmail
 ┃ mailinbox
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`,
-                image: true
-            },
-            '5': {
-                title: "🤖 *AI Menu*",
-                content: `╭🤖 *AI COMMANDS*
-╭─────────────┈⊷
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+
+            '5': { title: "🤖 *AI Menu*", content: `╭🤖 *AI COMMANDS*
 ┃ gpt
 ┃ openai
 ┃ deepseek
 ┃ gpt4
 ┃ chatgpt
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`,
-                image: true
-            },
-            '6': {
-                title: "👨‍💻 *Owner Menu*",
-                content: `╭👨‍💻 *OWNER COMMANDS*
-╭─────────────┈⊷
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+
+            '6': { title: "👨‍💻 *Owner Menu*", content: `╭👨‍💻 *OWNER COMMANDS*
 ┃ vv
 ┃ vv2 (❤️, 😇, 💔, 🙂, 😂)
 ┃ getpp <number>
@@ -184,25 +160,17 @@ cmd({
 ┃ svtext <text>
 ┃ restart
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`,
-                image: true
-            },
-            '7': {
-                title: "📰 *News Menu*",
-                content: `╭📰 *NEWS COMMANDS*
-╭─────────────┈⊷
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+
+            '7': { title: "📰 *News Menu*", content: `╭📰 *NEWS COMMANDS*
 ┃ newson
 ┃ newsoff
 ┃ autonews
 ┃ alerton
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`,
-                image: true
-            },
-            '8': {
-                title: "📂 *Main Menu*",
-                content: `╭📂 *MAIN COMMANDS*
-╭─────────────┈⊷
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+
+            '8': { title: "📂 *Main Menu*", content: `╭📂 *MAIN COMMANDS*
 ┃ alive
 ┃ ping
 ┃ system
@@ -210,11 +178,10 @@ cmd({
 ┃ repo
 ┃ about
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`,
-                image: true
-            }
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true }
         };
 
+        // Handler
         const handler = async (msgData) => {
             try {
                 const receivedMsg = msgData.messages[0];
@@ -234,7 +201,7 @@ cmd({
                                 await conn.sendMessage(
                                     senderID,
                                     {
-                                        image: { url: `https://i.ibb.co/Zp6zsyFs/2483.jpg` },
+                                        image: { url: "https://i.ibb.co/Zp6zsyF/2483.jpg" },
                                         caption: selectedMenu.content,
                                         contextInfo
                                     },
@@ -248,7 +215,8 @@ cmd({
                                 );
                             }
                             await conn.sendMessage(senderID, { react: { text: '✅', key: receivedMsg.key } });
-                        } catch {
+                        } catch (err) {
+                            console.error("Submenu error:", err.message);
                             await conn.sendMessage(senderID, { text: selectedMenu.content, contextInfo }, { quoted: receivedMsg });
                         }
                     } else {
