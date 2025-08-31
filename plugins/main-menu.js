@@ -1,20 +1,24 @@
-const fs = require('fs');
-const config = require('../config');
-const { cmd, commands } = require('../command');
-const { runtime } = require('../lib/functions');
-const axios = require('axios');
+const config = require("../config");
+const { cmd, commands } = require("../command");
+const os = require("os");
+const { runtime } = require("../lib/functions");
 
-cmd({
+const imageUrl = "https://files.catbox.moe/bs9phe.jpg";
+
+cmd(
+  {
     pattern: "menu",
-    desc: "Show interactive menu system",
-    category: "menu",
-    react: "📂",
-    filename: __filename
-}, async (conn, mek, { from, pushname }, { reply }) => {
+    react: "🗿",
+    alias: ["panel", "main"],
+    desc: "bot menu all",
+    category: "commands",
+    use: ".menu",
+    filename: __filename,
+  },
+  async (conn, mek, m, { from, quoted, pushname, reply }) => {
     try {
-        const totalCommands = Object.keys(commands).length;
-
-        const menuCaption = `*╭━━━〔 Iɴᴅᴜᴡᴀʀᴀ-Mᴅ 〕━━┈⊷*
+      const menuMessage = `
+*╭━━━〔 Iɴᴅᴜᴡᴀʀᴀ-Mᴅ 〕━━┈⊷*
 *│ ‍🤵‍♂️ 𝐔𝚜𝚎𝚛* : ${pushname || 'User'}
 *│ 🔍 𝐁𝚊𝚕𝚒𝚢𝚊𝚛𝚜* : Multi Device
 *│ ⌨️ 𝐓𝚢𝚙𝐞* : NodeJs
@@ -32,56 +36,34 @@ cmd({
 │❯❯ 07 *NEWS*
 │❯❯ 08 *MAIN*
 ╰━━━━━━━━━━━━●●►
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`;
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*
+`;
 
-        // Context info (mentions only)
-        const contextInfo = {
-            mentionedJid: [mek.sender],
-            forwardingScore: 999,
-            isForwarded: true
-        };
 
-        // Function to send menu (image fallback -> text)
-        const sendMenuImage = async () => {
-            try {
-                return await conn.sendMessage(
-                    from,
-                    {
-                        image: { url: "https://i.ibb.co/Zp6zsyF/2483.jpg" }, // check link
-                        caption: menuCaption,
-                        contextInfo
-                    },
-                    { quoted: mek }
-                );
-            } catch (err) {
-                console.error("Image menu error:", err.message);
-                return await conn.sendMessage(
-                    from,
-                    { text: menuCaption, contextInfo },
-                    { quoted: mek }
-                );
-            }
-        };
+      // send menu message with image
+      const sentMsg = await conn.sendMessage(from, {
+        image: { url: imageUrl },
+        caption: menuMessage,
+      });
 
-        let sentMsg;
-        try {
-            sentMsg = await Promise.race([
-                sendMenuImage(),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Image send timeout')), 10000))
-            ]);
-        } catch {
-            sentMsg = await conn.sendMessage(
-                from,
-                { text: menuCaption, contextInfo },
-                { quoted: mek }
-            );
-        }
+      // wait for replies (numbers 1-08)
+      conn.ev.on("messages.upsert", async (msgUpdate) => {
+        const msg = msgUpdate.messages[0];
+        if (!msg.message || !msg.message.extendedTextMessage) return;
 
-        const messageID = sentMsg.key.id;
+        const userReply =
+          msg.message.extendedTextMessage.text.trim();
 
-        // Menu data (options)
-        const menuData = {
-            '1': { title: "📥 *Download Menu*", content: `╭📥 *DOWNLOAD COMMANDS*
+        if (
+          msg.message.extendedTextMessage.contextInfo &&
+          msg.message.extendedTextMessage.contextInfo.stanzaId ===
+            sentMsg.key.id
+        ) {
+          let menuText;
+          switch (userReply) {
+            case "1":
+              menuText = `
+╭📥 *DOWNLOAD COMMANDS*
 ┃ facebook
 ┃ img
 ┃ ringtone
@@ -99,9 +81,13 @@ cmd({
 ┃ video
 ┃ mp4
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*
+`;
+              break;
 
-            '2': { title: "👥 *Group Menu*", content: `╭👥 *GROUP COMMANDS*
+            case "2":
+              menuText = `
+╭👥 *GROUP COMMANDS*
 ┃ join <link>
 ┃ invite
 ┃ revoke
@@ -114,9 +100,13 @@ cmd({
 ┃ mute
 ┃ unmute
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*
+`;
+              break;
 
-            '3': { title: "🔍 *Search Menu*", content: `╭🔍 *SEARCH COMMANDS*
+            case "3":
+              menuText = `
+╭🔍 *SEARCH COMMANDS*
 ┃ npm
 ┃ yts
 ┃ ytinfo
@@ -124,9 +114,13 @@ cmd({
 ┃ xstalk
 ┃ whether
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*
+`;
+              break;
 
-            '4': { title: "🔗 *Tools Menu*", content: `╭🔗 *TOOLS COMMANDS*
+            case "4":
+              menuText = `
+🔗 *TOOLS COMMANDS*
 ┃ cinfo
 ┃ tourl
 ┃ aivoice
@@ -136,18 +130,26 @@ cmd({
 ┃ genmail
 ┃ mailinbox
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*
+`;
+              break;
 
-            '5': { title: "🤖 *AI Menu*", content: `╭🤖 *AI COMMANDS*
+            case "5":
+              menuText = `
+🤖 *AI COMMANDS*
 ┃ gpt
 ┃ openai
 ┃ deepseek
 ┃ gpt4
 ┃ chatgpt
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*
+`;
+              break;
 
-            '6': { title: "👨‍💻 *Owner Menu*", content: `╭👨‍💻 *OWNER COMMANDS*
+            case "6":
+              menuText = `
+╭👨‍💻 *OWNER COMMANDS*
 ┃ vv
 ┃ vv2 (❤️, 😇, 💔, 🙂, 😂)
 ┃ getpp <number>
@@ -160,17 +162,25 @@ cmd({
 ┃ svtext <text>
 ┃ restart
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*
+`;
+              break;
 
-            '7': { title: "📰 *News Menu*", content: `╭📰 *NEWS COMMANDS*
+            case "7":
+              menuText = `
+╭📰 *NEWS COMMANDS*
 ┃ newson
 ┃ newsoff
 ┃ autonews
 ┃ alerton
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true },
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*
+`;
+              break;
 
-            '8': { title: "📂 *Main Menu*", content: `╭📂 *MAIN COMMANDS*
+            case "8":
+              menuText = `
+╭📂 *MAIN COMMANDS*
 ┃ alive
 ┃ ping
 ┃ system
@@ -178,73 +188,21 @@ cmd({
 ┃ repo
 ┃ about
 ╰━━━━━━━━━━━━━┈⊷
-> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, image: true }
-        };
+> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*
+`;
+              break;
 
-        // Handler
-        const handler = async (msgData) => {
-            try {
-                const receivedMsg = msgData.messages[0];
-                if (!receivedMsg?.message || !receivedMsg.key?.remoteJid) return;
+            default:
+              menuText =
+                "❌ Invalid option. Please enter a valid number (1-10)";
+          }
 
-                const isReplyToMenu = receivedMsg.message.extendedTextMessage?.contextInfo?.stanzaId === messageID;
-
-                if (isReplyToMenu) {
-                    const receivedText = receivedMsg.message.conversation || 
-                                         receivedMsg.message.extendedTextMessage?.text;
-                    const senderID = receivedMsg.key.remoteJid;
-
-                    if (menuData[receivedText]) {
-                        const selectedMenu = menuData[receivedText];
-                        try {
-                            if (selectedMenu.image) {
-                                await conn.sendMessage(
-                                    senderID,
-                                    {
-                                        image: { url: "https://i.ibb.co/Zp6zsyF/2483.jpg" },
-                                        caption: selectedMenu.content,
-                                        contextInfo
-                                    },
-                                    { quoted: receivedMsg }
-                                );
-                            } else {
-                                await conn.sendMessage(
-                                    senderID,
-                                    { text: selectedMenu.content, contextInfo },
-                                    { quoted: receivedMsg }
-                                );
-                            }
-                            await conn.sendMessage(senderID, { react: { text: '✅', key: receivedMsg.key } });
-                        } catch (err) {
-                            console.error("Submenu error:", err.message);
-                            await conn.sendMessage(senderID, { text: selectedMenu.content, contextInfo }, { quoted: receivedMsg });
-                        }
-                    } else {
-                        await conn.sendMessage(
-                            senderID,
-                            { text: `❌ *Invalid Option!* ❌\n\nReply 1-8 to select a menu.\n> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*`, contextInfo },
-                            { quoted: receivedMsg }
-                        );
-                    }
-                }
-            } catch (e) {
-                console.log('Handler error:', e);
-            }
-        };
-
-        conn.ev.on("messages.upsert", handler);
-        setTimeout(() => conn.ev.off("messages.upsert", handler), 300000);
-
-    } catch (e) {
-        console.error('Menu Error:', e);
-        try {
-            await conn.sendMessage(
-                from,
-                { text: `❌ Menu system busy. Try later.\n> *• © ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ •*` },
-                { quoted: mek }
-            );
-        } catch (finalError) {
-            console.log('Final error handling failed:', finalError);
+          await conn.sendMessage(from, { text: menuText }, { quoted: msg });
         }
+      });
+    } catch (e) {
+      console.error(e);
+      reply("⚠ An error occurred: " + e.message);
     }
-});
+  }
+);
