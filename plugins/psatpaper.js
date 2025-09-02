@@ -162,7 +162,7 @@ async (conn, mek, m, { from, reply, args }) => {
 
         if (downloadLink) {
             // PDF caption එක සකස් කිරීම
-            const caption = `*${finalSubjectName}* - ${year}\n_QUEEN SADU MD_`;
+            const caption = `*${finalSubjectName}* - ${year}\n_*© ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ*_`;
             
             // PDF එක document එකක් ලෙස යැවීම
             await conn.sendMessage(from, { 
@@ -226,7 +226,7 @@ async (conn, mek, m, { from, reply, args }) => {
         }
 
         if (downloadLink) {
-            const caption = `*${finalSubjectName}* - ${year}\n_QUEEN SADU MD_`;
+            const caption = `*${finalSubjectName}* - ${year}\n_*© ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ*_`;
             await conn.sendMessage(from, { 
                 document: { url: downloadLink }, 
                 mimetype: 'application/pdf', 
