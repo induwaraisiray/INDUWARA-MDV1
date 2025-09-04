@@ -1,84 +1,154 @@
+const { cmd } = require('../command');
+const axios = require("axios");
 
-const { fetchJson } = require('../lib/functions')
-const config = require('../config')
-const { cmd, commands } = require('../command')
-
-// FETCH API URL
-let baseUrl;
-(async () => {
-    let baseUrlGet = await fetchJson(`https://raw.githubusercontent.com/prabathLK/PUBLIC-URL-HOST-DB/main/public/url.json`)
-    baseUrl = baseUrlGet.api
-})();
-
-
-const yourName = ">© ᴩᴏᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ ᴍᴅ";
-
-//twitter dl (x)
 cmd({
-    pattern: "twitter",
-    alias: ["twdl"],
-    desc: "download tw videos",
-    category: "download",
-    react: "🔎",
-    filename: __filename
-},
-async(conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
-    try {
-        if (!q && !q.startsWith("https://")) return reply("give me twitter url")
-        //fetch data from api  
-        let data = await fetchJson(`${baseUrl}/api/twitterdl?url=${q}`)
-        reply("*Downloading...*")
-        //send video (hd,sd)
-        await conn.sendMessage(from, { video: { url: data.data.data.HD }, mimetype: "video/mp4", caption: `- HD\n\n ${yourName}` }, { quoted: mek })
-        await conn.sendMessage(from, { video: { url: data.data.data.SD }, mimetype: "video/mp4", caption: `- SD \n\n ${yourName}` }, { quoted: mek })  
-        //send audio    
-        await conn.sendMessage(from, { audio: { url: data.data.data.audio }, mimetype: "audio/mpeg" }, { quoted: mek })  
-    } catch (e) {
-        console.log(e)
-        reply(`${e}`)
+  pattern: "mediafire1",
+  alias: ["mfire"],
+  desc: "To download MediaFire files.",
+  react: "♨️",
+  category: "download",
+  filename: __filename
+}, async (conn, m, store, { from, quoted, q, reply }) => {
+  try {
+    if (!q) {
+      return reply("❌ Please provide a valid MediaFire link.");
     }
-})
 
-//gdrive(google drive) dl
-cmd({
-    pattern: "gdrive",
-    alias: ["googledrive"],
-    desc: "download gdrive files",
-    category: "download",
-    react: "🔎",
-    filename: __filename
-},
-async(conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
-    try {
-        if (!q && !q.startsWith("https://")) return reply("give me gdrive url")
-        //fetch data from api  
-        let data = await fetchJson(`${baseUrl}/api/gdrivedl?url=${q}`)
-        reply("*Downloading...*")
-        await conn.sendMessage(from, { document: { url: data.data.download }, fileName: data.data.fileName, mimetype: data.data.mimeType, caption: `${data.data.fileName}\n\n${yourName}` }, { quoted: mek })                                                                                                                 
-    } catch (e) {
-        console.log(e)
-        reply(`${e}`)
-    }
-})
+    await conn.sendMessage(from, {
+      react: { text: "⏳", key: m.key }
+    });
 
-//mediafire dl
-cmd({
-    pattern: "mediafire",
-    alias: ["mfire"],
-    desc: "download mfire files",
-    category: "download",
-    react: "🔎",
-    filename: __filename
-},
-async(conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
+    let response;
     try {
-        if (!q && !q.startsWith("https://")) return reply("give me mediafire url")
-        //fetch data from api  
-        let data = await fetchJson(`${baseUrl}/api/mediafiredl?url=${q}`)
-        reply("*Downloading...*")
-        await conn.sendMessage(from, { document: { url: data.data.link_1 }, fileName: data.data.name, mimetype: data.data.file_type, caption: `${data.data.name}\n\n${yourName}` }, { quoted: mek })                                                                                                                 
-    } catch (e) {
-        console.log(e)
-        reply(`${e}`)
+      response = await axios.get(`https://nethu-api.vercel.app/download/mfire?url=${encodeURIComponent(q)}`);
+    } catch (err) {
+      console.error("API Error:", err.message);
+      return reply("⚠️ MediaFire API is not responding. Please try again later.");
     }
-})
+
+    const data = response?.data;
+
+    if (!data || !data.status || !data.result || !data.result.dl_link) {
+      return reply("⚠️ Failed to fetch MediaFire download link. Ensure the link is valid and public.");
+    }
+
+    const { dl_link, fileName, fileType, fileSize } = data.result;
+    const file_name = fileName || "mediafire_download";
+    const mime_type = fileType || "application/octet-stream";
+    const file_size = fileSize || "Unknown";
+
+    // Large file check (200MB example)
+    if (fileSize && (parseInt(fileSize) > 200 * 1024 * 1024)) {
+      return reply(`⚠️ The file is too large to send via WhatsApp.\n\n📦 *File Name:* ${file_name}\n📏 *Size:* ${file_size}`);
+    }
+
+    await conn.sendMessage(from, {
+      react: { text: "⬆️", key: m.key }
+    });
+
+    // Initial caption
+    let caption = `╭━━━〔 *MEDIAFIRE DOWNLOADER* 〕━━━⊷\n`
+      + `┃▸ *File Name:* ${file_name}\n`
+      + `┃▸ *File Type:* ${mime_type}\n`
+      + `┃▸ *File Size:* ${file_size}\n`
+      + `╰━━━⪼\n\n`
+      + `📥 *Preparing download...*`;
+
+    const msg = await conn.sendMessage(from, { text: caption }, { quoted: m });
+
+    // Fake progress bar simulation
+    const progressSteps = [
+      "█░░░░░░░░░ 10%",
+      "██░░░░░░░░ 20%",
+      "███░░░░░░░ 30%",
+      "████░░░░░░ 40%",
+      "█████░░░░░ 50%",
+      "██████░░░░ 60%",
+      "███████░░░ 70%",
+      "████████░░ 80%",
+      "█████████░ 90%",
+      "██████████ 100%"
+    ];
+
+    for (let i = 0; i < progressSteps.length; i++) {
+      await new Promise(r => setTimeout(r, 600)); // Delay
+      await conn.sendMessage(from, {
+        edit: msg.key,
+        text: `╭━━━〔 *MEDIAFIRE DOWNLOADER* 〕━━━⊷\n`
+          + `┃▸ *File Name:* ${file_name}\n`
+          + `┃▸ *File Size:* ${file_size}\n`
+          + `╰━━━⪼\n\n`
+          + `📥 Downloading...\n\n${progressSteps[i]}`
+      });
+    }
+
+    // Send the file
+    await conn.sendMessage(from, {
+      document: { url: dl_link },
+      mimetype: mime_type,
+      fileName: file_name,
+      caption: `✅ *Download Complete!*`
+    }, { quoted: m });
+
+  } catch (error) {
+    console.error("Command Error:", error);
+    reply("❌ An error occurred while processing your request. Please try again.");
+  }
+});
+
+cmd({
+  pattern: "mediafire",
+  alias: ["mfire"],
+  desc: "To download MediaFire files.",
+  react: "♨️",
+  category: "download",
+  filename: __filename
+}, async (conn, m, store, {
+  from,
+  quoted,
+  q,
+  reply
+}) => {
+  try {
+    if (!q) {
+      return reply("❌ Please provide a valid MediaFire link.");
+    }
+
+    await conn.sendMessage(from, {
+      react: { text: "⏳", key: m.key }
+    });
+
+    const response = await axios.get(`https://nethu-api.vercel.app/download/mfire?url=${q}`);
+    const data = response.data;
+
+    if (!data || !data.status || !data.result || !data.result.dl_link) {
+      return reply("⚠️ Failed to fetch MediaFire download link. Ensure the link is valid and public.");
+    }
+
+    const { dl_link, fileName, fileType } = data.result;
+    const file_name = fileName || "mediafire_download";
+    const mime_type = fileType || "application/octet-stream";
+
+    await conn.sendMessage(from, {
+      react: { text: "⬆️", key: m.key }
+    });
+
+    const caption = `╭━━━〔 *MEDIAFIRE DOWNLOADER* 〕━━━⊷\n`
+      + `┃▸ *File Name:* ${file_name}\n`
+      + `┃▸ *File Type:* ${mime_type}\n`
+      + `╰━━━⪼\n\n`
+      + `📥 *Downloading your file...*`;
+
+    await conn.sendMessage(from, {
+      document: { url: dl_link },
+      mimetype: mime_type,
+      fileName: file_name,
+      caption: caption
+    }, { quoted: m });
+
+  } catch (error) {
+    console.error("Error:", error);
+    reply("❌ An error occurred while processing your request. Please try again.");
+  }
+});
+    
