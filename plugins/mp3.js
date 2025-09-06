@@ -19,7 +19,7 @@ cmd({
         if (searchResult.results.length < 1) return reply("No results found!");
 
         let video = searchResult.results[0];
-        let apiUrl = "https://apis.davidcyriltech.my.id/download/ytmp4?url=" + encodeURIComponent(video.url);
+        let apiUrl = "https://apis-sandarux.zone.id/api/yt/ytdl?url=" + encodeURIComponent(video.url);
 
         let response = await fetch(apiUrl);
         let data = await response.json();
@@ -113,7 +113,7 @@ cmd({
         if (searchResult.results.length < 1) return reply("No results found!");
 
         let song = searchResult.results[0];
-        let apiUrl = "https://apis.davidcyriltech.my.id/youtube/mp3?url=" + encodeURIComponent(song.url);
+        let apiUrl = "https://apis-sandarux.zone.id/api/yt/ytdl?url=" + encodeURIComponent(song.url);
 
         let response = await fetch(apiUrl);
         let data = await response.json();
