@@ -29,7 +29,7 @@ cmd({
             id = searchResults.results[0].videoId;
         }
 
-        const data = await dy_scrap.ytsearch(`https://youtube.com/watch?v=${id}`);
+        const data = await dy_scrap.ytsearch(`https://apis-sandarux.zone.id/api/yt/ytdl?url=${id}`);
         if (!data?.results?.length) return await reply("❌ Failed to fetch video!");
 
         const { url, title, image, timestamp, ago, views, author } = data.results[0];
