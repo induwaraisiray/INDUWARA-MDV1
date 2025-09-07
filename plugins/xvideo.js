@@ -1,98 +1,46 @@
-const config = require('../config');
-const { cmd , commands } = require('../command');
-const { fetchJson } = require('../lib/functions')
+const { cmd } = require('../command');
+const axios = require("axios");
 
 cmd({
-    pattern: "xvid",
-    alias: ["xvideo"],
-    use: '.xvid <query>',
-    react: "🔞",
-    desc: "xnxx video search & download",
-    category: "download",
-    filename: __filename
-}, async (messageHandler, context, quotedMessage, { from, q, reply }) => {
+  pattern: "mediafire",
+  alias: ["mf", "mfdown"],
+  desc: "To download MediaFire files.",
+  react: "♨️",
+  category: "download",
+  filename: __filename,
+  handler: async (m, { conn, text }) => {
+    if (!text) {
+      return m.reply('❌ Please provide a MediaFire link to download.\n\nExample: https://www.mediafire.com/file/xxxxxxxxx/xxxxx.zip/file');
+    }
+
     try {
-        if (!q) return reply('⭕ *Please Provide Search Terms.*');
+      // Fetch data from API
+      const { data } = await axios.get(`https://restapi.simplebot.my.id/api/download/mediafire?url=${text}`);
 
-        // SEARCH API
-        let res = await fetchJson(`https://api.vreden.my.id/api/xnxxsearch?query=${q}`);
-        console.log("SEARCH API Response:", res);
+      console.log(data);
 
-        if (!res || !res.result || res.result.length === 0) {
-            return reply("⭕ *I Couldn't Find Anything 🙄*");
-        }
+      // Validate API response
+      if (!data || !data.result || !data.result.url) {
+        return m.reply('⚠️ Invalid response from API. Please check the link.');
+      }
 
-        const data = res.result.slice(0, 10);
+      // Notify user
+      await conn.sendMessage(m.chat, { text: "⬇️ Downloading your file from MediaFire..." }, { quoted: m });
 
-        let message = `*🔞 QUEEN NETHU MD XNXX DOWNLOADER 🔞*\n\n`;
-        let options = '';
+      // Send the file
+      await conn.sendMessage(m.chat, {
+        document: { url: data.result.url },
+        mimetype: data.result.mimetype || 'application/octet-stream',
+        fileName: data.result.filename || "mediafire_file",
+        caption: `📂 *Name*: ${data.result.filename}\n📦 *Size*: ${data.result.size}`
+      }, { quoted: m });
 
-        data.forEach((v, index) => {
-            options += `${index + 1}. *${v.title}*\n\n`;
-        });
-
-        message += options;
-        message += `> ⚜️ _𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐝_ *- :* *_SL NETHU MAX_ ᵀᴹ*\n\n`;
-
-        const sentMessage = await messageHandler.sendMessage(from, {
-            image: { url: `https://i.ibb.co/ntvzPr8/s-Wuxk4b-KHr.jpg` },
-            caption: message
-        }, { quoted: quotedMessage });
-
-        session[from] = {
-            searchResults: data,
-            messageId: sentMessage.key.id,
-        };
-
-        const handleUserReply = async (update) => {
-            const userMessage = update.messages[0];
-
-            if (!userMessage.message.extendedTextMessage ||
-                userMessage.message.extendedTextMessage.contextInfo.stanzaId !== sentMessage.key.id) {
-                return;
-            }
-
-            const userReply = userMessage.message.extendedTextMessage.text.trim();
-            const videoIndexes = userReply.split(',').map(x => parseInt(x.trim()) - 1);
-
-            for (let index of videoIndexes) {
-                if (isNaN(index) || index < 0 || index >= data.length) {
-                    return reply("⭕ *Please Enter Valid Numbers From The List.*");
-                }
-            }
-
-            for (let index of videoIndexes) {
-                const selectedVideo = data[index];
-
-                try {
-                    // DOWNLOAD API
-                    let downloadRes = await fetchJson(`https://api.vreden.my.id/api/xnxxdl?qurey=${selectedVideo.url}`);
-                    console.log("DOWNLOAD API Response:", downloadRes);
-
-                    let videoUrl = downloadRes?.result?.files?.high || downloadRes?.result?.files?.low;
-
-                    if (!videoUrl) {
-                        return reply(`⭕ *Failed To Fetch Video* for "${selectedVideo.title}".`);
-                    }
-
-                    await messageHandler.sendMessage(from, {
-                        video: { url: videoUrl },
-                        caption: `${downloadRes.result.title}\n\n> ⚜️ _𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐝_ *- :* *_SL NETHU MAX_ ᵀᴹ*`
-                    });
-
-                } catch (err) {
-                    console.error("Download Error:", err);
-                    return reply(`⭕ *An Error Occurred While Downloading "${selectedVideo.title}".*`);
-                }
-            }
-
-            delete session[from];
-        };
-
-        messageHandler.ev.on("messages.upsert", handleUserReply);
+      // Success confirmation
+      await conn.sendMessage(m.chat, { text: "✅ File uploaded successfully!" }, { quoted: m });
 
     } catch (error) {
-        console.error(error);
-        await messageHandler.sendMessage(from, { text: '⭕ *Error Occurred During The Process!*' }, { quoted: quotedMessage });
+      console.error('Error downloading MediaFire file:', error);
+      m.reply('❌ Failed to download the file. Please check the MediaFire link and try again.');
     }
+  }
 });
