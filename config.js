@@ -1,11 +1,11 @@
 const fs = require("fs");
 
 let settings = {
-  SESSION_ID: process.env.SESSION_ID || "default-session",
+  SESSION_ID: process.env.SESSION_ID || "NIMA~MD&8nMgTJbY#U7ntTMK1mIJQkK0JuMc9sSoB-XcsPLrtwfC20SceDaQ",
   AUTO_STATUS_SEEN: process.env.AUTO_STATUS_SEEN || "true",
   AUTO_STATUS_REPLY: process.env.AUTO_STATUS_REPLY || "false",
   AUTO_STATUS_REACT: process.env.AUTO_STATUS_REACT || "true",
-  AUTO_STATUS_MSG: process.env.AUTO_STATUS_MSG || ".✓",
+  AUTO_STATUS_MSG: process.env.AUTO_STATUS_MSG || "✓",
   PREFIX: process.env.PREFIX || ".",
   CUSTOM_REACT: process.env.CUSTOM_REACT || "true",
   DELETE_LINKS: process.env.DELETE_LINKS || "false",
