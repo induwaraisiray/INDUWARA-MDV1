@@ -2,8 +2,9 @@ const fs = require("fs");
 if (fs.existsSync('config.env')) require('dotenv').config({ path: './config.env' });
 
 function convertToBool(text, fault = 'true') {
-    return text === fault ? true : false;
-  
+  return text === fault ? true : false;
+}
+
 let settings = {
   SESSION_ID: process.env.SESSION_ID || "NIMA~MD&8nMgTJbY#U7ntTMK1mIJQkK0JuMc9sSoB-XcsPLrtwfC20SceDaQ",
   AUTO_STATUS_SEEN: process.env.AUTO_STATUS_SEEN || "true",
