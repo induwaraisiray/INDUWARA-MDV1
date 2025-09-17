@@ -147,43 +147,15 @@ cmd({
 // -------------------- JID Command --------------------//
 cmd({
   pattern: 'jid',
-  desc: 'Get full JID info and type',
+  desc: 'Get the chat JID (WhatsApp ID)',
   category: 'tools',
   react: '🆔',
-}, async (client, message) => {
+}, async (client, message, match) => {
   try {
-    const jid = message.chat;
-    let type = 'Unknown Chat Type';
-    let extraInfo = '';
-
-    if (jid.endsWith('@g.us')) {
-      type = 'Group Chat';
-      try {
-        const groupMeta = await client.groupMetadata(jid);
-        const groupName = groupMeta.subject;
-        const inviteCode = await client.groupInviteCode(jid);
-        extraInfo = `• *Group Name:* groupName• *Invite Link:* https://chat.whatsapp.com/{inviteCode}`;
-      } catch {
-        extraInfo = '• Cannot fetch group metadata (bot might not be admin)';
-      }
-    } else if (jid.endsWith('@broadcast')) {
-      type = 'Broadcast List';
-    } else if (jid.endsWith('@channel')) {
-      type = 'Channel';
-    } else if (jid.endsWith('@s.whatsapp.net')) {
-      type = 'Private Chat';
-    }
-
-    await message.reply(
-`🔎 *Chat Information:*
-
-• *JID:* jid
-• *Type:*{type}
-${extraInfo ? '\n' + extraInfo : ''}
-`);
+    message.reply(message.chat);
   } catch (err) {
     console.error(err);
-    message.reply('❌ Error retrieving JID information.');
+    message.reply('❌ Error getting JID.');
   }
 });
 
@@ -259,7 +231,18 @@ cmd({
       buffer = Buffer.concat([buffer, chunk]);
     }
 
-    await conn.updateProfilePicture(conn.user.id, buffer);
+    // Temporary file save
+    const fs = require("fs");
+    const path = require("path");
+    const filePath = path.join(__dirname, "temp_pp.jpg");
+    fs.writeFileSync(filePath, buffer);
+
+    // Update profile picture
+    await conn.updateProfilePicture(conn.user.id, { url: filePath });
+
+    // Delete temp file
+    fs.unlinkSync(filePath);
+
     reply("*🖼️ Profile picture updated successfully!*");
   } catch (error) {
     reply(`❌ Error updating profile picture: ${error.message}`);
@@ -332,33 +315,61 @@ cmd({
   }
 });
 
-// -------------------- System Info --------------------
+// -------------------- Advanced System Info Command --------------------
 cmd({
   pattern: "system",
   alias: ["status","botinfo"],
-  desc: "check up time",
+  desc: "Check bot runtime, system usage and version",
   category: "main",
-  react: "📟",
+  react: "🤖",
   filename: __filename
 }, async (conn, mek, m,{ reply }) => {
-  try { 
-    let status =`
-*╭━━━━━━━━━━━━━━━━━━━━━━━━━━━〣*
-*│* ☰ BOT SYSTEM INFORMATION
-*│* ⏳ Runtime :- ${runtime(process.uptime())}
-*│* 🧠 Ram usage :- ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}MB / ${(os.totalmem() / 1024 / 1024).toFixed(2)}MB
-*│* 💻 Platform :- ${os.hostname()}
-*│* 🔋 Work 24/7 No stop
-*│* 🆚 Version :- 1.0.0
-*│* 👤 Owner :- Isira Induwara </>
-*┗━━━━━━━━━━━━━━━━━━━━━━━━━━━〣*`
-    return reply(status)
+  try {
+    const os = require('os');
+
+    // Format uptime to HH:MM:SS
+    function formatUptime(seconds) {
+      const hrs = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${hrs}h ${mins}m ${secs}s`;
+    }
+
+    const cpuUsage = os.loadavg()[0].toFixed(2); // 1 min load average
+    const ramUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+    const ramTotal = (os.totalmem() / 1024 / 1024).toFixed(2);
+    const uptime = formatUptime(process.uptime());
+    const platform = `${os.type()} ${os.arch()} (${os.platform()})`;
+    const hostname = os.hostname();
+    const version = "1.0.0";
+    
+    let status = `
+*╭━━━━━━━━━━━━━━━━━━━━━━╮*
+*│* 🤖 BOT SYSTEM INFO
+*│*──────────────────────
+*│* ⏳ Uptime      : ${uptime}
+*│* 🧠 RAM Usage   : ${ramUsed} MB / ${ramTotal} MB
+*│* 💻 CPU Load    : ${cpuUsage}%
+*│* 🖥 Platform    : ${platform}
+*│* 🏷 Hostname    : ${hostname}
+*│* 🔋 Status      : Online 24/7
+*│* 🆚 Version     : ${version}
+*│* 👤 Owner       : Isira Induwara
+*╰━━━━━━━━━━━━━━━━━━━━━━╯*
+
+*📊 Extra Info*
+*• CPU Cores     : ${os.cpus().length}
+*• Free Memory   : ${(os.freemem() / 1024 / 1024).toFixed(2)} MB
+*• Total Users   : ${Object.keys(global.db.users || {}).length} (if using user DB)
+*• Node Version  : ${process.version}
+`;
+
+    return reply(status);
   } catch (e) {
-    console.log(e)
-    reply(`${e}`)
+    console.log(e);
+    reply(`⚠️ Error:\n${e}`);
   }
 });
-
 // -------------------- Ping --------------------
 cmd({
   pattern: "ping",
@@ -383,84 +394,99 @@ cmd({
 // -------------------- Alive --------------------
 cmd({
   pattern: "alive",
-  alias: ["status", "runtime", "uptime"],
-  desc: "Check uptime and system status with Sinhala greeting and English info + Sun Animation",
+  alias: ["status"],
+  desc: "Alive Command with Real Loading",
   category: "main",
-  react: "👋",
+  react: "⚡",
   filename: __filename
-}, async (conn, mek, m, { from, pushname, reply }) => {
+}, async (conn, mek, m, { reply, pushname }) => {
   try {
-    const now = new Date();
-    let hour = now.getHours();
-    let minute = now.getMinutes();
+    // Send initial loading message
+    let loadingMsg = await reply("⏳ Loading");
 
-    // Time in 12h format
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const displayHour = hour % 12 || 12;
-    const formattedTime = `${displayHour.toString().padStart(2, "0")}:${minute
-      .toString()
-      .padStart(2, "0")} ${ampm}`;
-
-    // Sinhala day names
-    const days = ["ඉරිදා", "සඳුදා", "අඟහරුවාදා", "බදාදා", "බ්‍රහස්පතින්දා", "සිකුරාදා", "සෙනසුරාදා"];
-    const dayIndex = now.getDay();
-    const dayName = days[dayIndex];
-
-    // Greeting
-    let greeting = "";
-    if (hour >= 5 && hour < 12) {
-      greeting = "*🌄 සුභ උදෑසනක්*";
-    } else if (hour >= 12 && hour < 17) {
-      greeting = "*🌤️ සුභ දහවලක්*";
-    } else if (hour >= 17 && hour < 20) {
-      greeting = "*🌆 සුභ සන්ධ්‍යාවක්*";
-    } else {
-      greeting = "*🌃 සුභ රාත්‍රියක්*";
+    // Dynamic loading animation (edit same message)
+    const steps = ["⏳ Loading.", "⏳ Loading..", "⏳ Loading..."];
+    for (let i = 0; i < 6; i++) { // 6 steps = 3 cycles
+      await new Promise(resolve => setTimeout(resolve, 500)); // 0.5s interval
+      if (loadingMsg && loadingMsg.key) {
+        await conn.sendMessage(mek.chat, { text: steps[i % steps.length] }, { quoted: loadingMsg });
+      }
     }
 
-    // Daily messages
-    const dailyMessages = {
-      0: "🛐 අද ඉරිදා – පවුලේ අයත් එක්ක කාලය ගත කරන්න.",
-      1: "💼 අද සඳුදා – නව සතියේ අරඹුම, hustle on!",
-      2: "🚀 අද අඟහරුවාදා – වැඩේ drive එකෙන් කරමු.",
-      3: "📚 අද බදාදා – මැද සතියේ energy boost එක ගන්න.",
-      4: "🔮 අද බ්‍රහස්පතින්දා – Positive vibes ❤️",
-      5: "🎉 අද සිකුරාදා – සතියේ අවසානය ලඟා වෙලා!",
-      6: "🍻 අද සෙනසුරාදා – Chill mode 🔥",
-    };
+    // Get user number
+    const senderNumber = mek.sender?.split("@")[0] || "Unknown";
 
-    // Simple text-based Sun Animation
-    const sunAnimation = `
-☀️🌤️🌞🌅🌄
-🌞   🌞   🌞
-☀️🌤️🌞🌅🌄
+    // Final Stylish Alive message
+    const caption = `
+
+*╭───────────────⊶⟢*
+*┊ ⫷ I AM ALIVE NOW ⫸*
+*╰───────────────⊶⟢*
+
+*╭──────────────────⊶⟢*
+*┊* *◈ 👤 User:*  ${pushname || "Unknown"}
+*┊* *◈ 📱 Number:* ${senderNumber}
+*┊* *◈ 👑 Owner:* Isira Induwara </>
+*┊* *◈ 💻Version:* 1.00
+*╰──────────────────⊶⟢*
+
+> © *𝗩ɪʟᴏɴ-x-ᴍ𝗗*
 `;
 
-    const status = `
-${sunAnimation}
+    // Send final alive message
+    await conn.sendMessage(mek.chat, { text: caption }, { quoted: mek });
 
-*👋 ${greeting}, ${pushname}!*
-අද ${dayName}  
-${dailyMessages[dayIndex]}
-
-⏰ Time: ${formattedTime}
-
-*╭━━━━━━━━━━━━━━━━━━━━━━━〣*
-*│* ☰ BOT IS ALIVE NOW
-*│* *⏳ Uptime:* ${runtime(process.uptime())}
-*│* *⚡ CPU Load:* ${os.loadavg()[0].toFixed(2)} (1 min avg)
-*│* *💻 Platform:* ${os.hostname()}
-*│* *🧠 RAM Usage:* ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}MB / ${(os.totalmem() / 1024 / 1024).toFixed(2)}MB
-*│* *🆚 Version:* 1.0.0
-*│* *👤 Owner:* Isira Induwara </>
-*┗━━━━━━━━━━━━━━━━━━━━━━━〣*
-
-${sunAnimation}
-`;
-
-    return reply(status);
   } catch (e) {
     console.error(e);
-    reply(`${e}`);
+    reply(`❌ Error: ${e.message}`);
   }
 });
+
+// -------------------- Read All Messages Command --------------------
+cmd({
+  pattern: "readallmsg",
+  desc: "Mark all unread messages as read (owner only)",
+  category: "owner",
+  react: "✅",
+  filename: __filename,
+  owner: true // only bot owner can use
+}, async (conn, mek, m, { reply }) => {
+  try {
+    // Mark all chats as read
+    await conn.readMessages([]);
+    
+    // Reply confirmation
+    reply("📖 All messages marked as read ✅");
+    
+  } catch (error) {
+    console.log(error);
+    reply(`⚠️ Error while marking messages read:\n${error}`);
+  }
+});
+
+// -------------------- Read All & Post Status Command --------------------
+cmd({
+  pattern: "readstatus",
+  desc: "Mark all messages as read and post a status (owner only)",
+  category: "owner",
+  react: "📖",
+  filename: __filename,
+  owner: true
+}, async (conn, mek, m, { reply }) => {
+  try {
+    // 1️⃣ Mark all messages as read
+    await conn.readMessages([]);
+    
+    // 2️⃣ Post a WhatsApp status (text only)
+    const statusMessage = "🤖 Bot is online and all messages read ✅";
+    await conn.setStatus(statusMessage); // Sets WhatsApp status/story
+
+    // 3️⃣ Confirmation reply
+    reply(`✅ All messages marked as read and status updated!\n\nStatus: "${statusMessage}"`);
+
+  } catch (error) {
+    console.log(error);
+    reply(`⚠️ Error while executing command:\n${error}`);
+  }
+});
+                 
