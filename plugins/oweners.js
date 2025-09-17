@@ -384,40 +384,68 @@ cmd({
 cmd({
   pattern: "alive",
   alias: ["status", "runtime", "uptime"],
-  desc: "Check uptime and system status with Sinhala greeting and English info",
+  desc: "Check uptime and system status with Sinhala greeting and English info + Sun Animation",
   category: "main",
   react: "👋",
   filename: __filename
 }, async (conn, mek, m, { from, pushname, reply }) => {
   try {
     const now = new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
+    let hour = now.getHours();
+    let minute = now.getMinutes();
 
-    // Format time in HH:MM
-    const formattedTime = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+    // Time in 12h format
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+    const formattedTime = `${displayHour.toString().padStart(2, "0")}:${minute
+      .toString()
+      .padStart(2, "0")} ${ampm}`;
 
-    // Determine Sinhala time-based greeting
+    // Sinhala day names
+    const days = ["ඉරිදා", "සඳුදා", "අඟහරුවාදා", "බදාදා", "බ්‍රහස්පතින්දා", "සිකුරාදා", "සෙනසුරාදා"];
+    const dayIndex = now.getDay();
+    const dayName = days[dayIndex];
+
+    // Greeting
     let greeting = "";
     if (hour >= 5 && hour < 12) {
-      greeting = "*🌄 සුභ උදෑසනක්‌*‌";
+      greeting = "*🌄 සුභ උදෑසනක්*";
     } else if (hour >= 12 && hour < 17) {
-      greeting = "*🌤️ සුභ දහවලක්‌*";
-    } else if (hour >= 17 && hour < 21) {
+      greeting = "*🌤️ සුභ දහවලක්*";
+    } else if (hour >= 17 && hour < 20) {
       greeting = "*🌆 සුභ සන්ධ්‍යාවක්*";
     } else {
       greeting = "*🌃 සුභ රාත්‍රියක්*";
     }
 
-    // Sinhala day names
-    const days = ["ඉරිදා", "සඳුදා", "අඟහරුවාදා", "බදාදා", "බ්‍රහස්පතින්දා", "සිකුරාදා", "සෙනසුරාදා"];
-    const dayName = days[now.getDay()];
+    // Daily messages
+    const dailyMessages = {
+      0: "🛐 අද ඉරිදා – පවුලේ අයත් එක්ක කාලය ගත කරන්න.",
+      1: "💼 අද සඳුදා – නව සතියේ අරඹුම, hustle on!",
+      2: "🚀 අද අඟහරුවාදා – වැඩේ drive එකෙන් කරමු.",
+      3: "📚 අද බදාදා – මැද සතියේ energy boost එක ගන්න.",
+      4: "🔮 අද බ්‍රහස්පතින්දා – Positive vibes ❤️",
+      5: "🎉 අද සිකුරාදා – සතියේ අවසානය ලඟා වෙලා!",
+      6: "🍻 අද සෙනසුරාදා – Chill mode 🔥",
+    };
+
+    // Simple text-based Sun Animation
+    const sunAnimation = `
+☀️🌤️🌞🌅🌄
+🌞   🌞   🌞
+☀️🌤️🌞🌅🌄
+`;
 
     const status = `
-*👋 ${greeting}, ${pushname}! අද ${dayName}*  
-⏰ Current time: ${formattedTime}
+${sunAnimation}
 
-*╭━━━━━━━━━━━━━━━━━━━━━━━━━━━〣*
+*👋 ${greeting}, ${pushname}!*
+අද ${dayName}  
+${dailyMessages[dayIndex]}
+
+⏰ Time: ${formattedTime}
+
+*╭━━━━━━━━━━━━━━━━━━━━━━━〣*
 *│* ☰ BOT IS ALIVE NOW
 *│* *⏳ Uptime:* ${runtime(process.uptime())}
 *│* *⚡ CPU Load:* ${os.loadavg()[0].toFixed(2)} (1 min avg)
@@ -425,7 +453,9 @@ cmd({
 *│* *🧠 RAM Usage:* ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}MB / ${(os.totalmem() / 1024 / 1024).toFixed(2)}MB
 *│* *🆚 Version:* 1.0.0
 *│* *👤 Owner:* Isira Induwara </>
-*┗━━━━━━━━━━━━━━━━━━━━━━━━━━━〣*
+*┗━━━━━━━━━━━━━━━━━━━━━━━〣*
+
+${sunAnimation}
 `;
 
     return reply(status);
