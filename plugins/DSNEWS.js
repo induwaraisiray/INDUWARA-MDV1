@@ -4,7 +4,7 @@ const axios = require('axios');
 const { fetchJson } = require('../lib/functions');
 
 const apilink = 'https://nethu-api.vercel.app/news';
-let wm = '> *©ᴩᴏᴡᴇʀᴅ ʙʏ ɪɴᴅᴜᴡᴀʀᴀ 〽️ᴅ*';
+let wm = '> *© ᴩᴏᴡᴇʀᴅ ʙʏ ᴠɪʟᴏɴ-x-ᴍᴅ*';
 let latestNews = {};
 let newsIntervals = {}; // Group-wise news interval storage
 let alertEnabledGroups = {}; // Group-wise alert status
@@ -34,7 +34,7 @@ async function checkAndSendNews(conn, from) {
 
                 latestNews[`${from}_${site.name}`] = newTitle;
 
-                const msg = `*🚨 ${news.result.title} (${site.name})*\n\n*${news.result.date}*\n\n${news.result.desc}\n\n${news.result.link || news.result.url}\n\n${wm}`;
+                const msg = `*📰 ${news.result.title} (${site.name})*\n\n*${news.result.date}*\n\n${news.result.desc}\n\n${news.result.link || news.result.url}\n\n${wm}`;
 
                 await conn.sendMessage(from, {
                     image: { url: news.result.image || news.result.img || 'https://via.placeholder.com/500' },
