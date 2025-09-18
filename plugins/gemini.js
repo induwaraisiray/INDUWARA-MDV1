@@ -1,51 +1,73 @@
-const {cmd , commands} = require('../command')
-const axios = require("axios")
-const config = require('../config');
+const { cmd } = require('../command');
+const axios = require("axios");
 
-const GEMINI_API_KEY = 'AIzaSyC8pSIvRTtYS-ZghDZWWPUY360gEFB37hM';  //REPLACE WITH YOUR API KEY OF GEMINI
+// API CONFIG
+const GEMINI_API_KEY = 'AIzaSyC8pSIvRTtYS-ZghDZWWPUY360gEFB37hM';  // Replace
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+// 🧠 Session store
+let geminiSessions = {}; 
 
 cmd({
   pattern: "gemini",
   alias: ["ai","chatgpt"],
   react: '🤖',
-  desc: "Ask anything to Google Gemini AI.",
+  desc: "Talk with Google Gemini AI.",
   category: "ai",
-  use: ".gemini <Your Quoestion>",
+  use: ".gemini <Your Question>",
   filename: __filename
-}, async (conn, mek, msg, { from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
+}, async (conn, mek, m, { reply, args, pushname, sender }) => {
   try {
     const text = args.join(" ");
     if (!text) {
-      return reply(`❗️ Please GFive Me A Question`);
+      return reply("❗ Please give me a question.");
     }
 
-    const prompt = `my name is ${pushname}, Your name is Rasindu AI. you are a WhatsApp AI Bot. you were made by Rasindu(රසිදු). answer in the language the person talking to you speak. Answer in a way that doesn't sound like you're a bot. think you are human and answer. Use meaningful emojis. my question is: ${text}`;
+    // 🧠 Create new session
+    geminiSessions[sender] = true;  
+
+    const prompt = `My name is ${pushname}. Your name is Rasindu AI. You are a WhatsApp AI bot created by Induwara. Answer in the same language I'm using. Answer naturally, like a human, not a bot. Add meaningful emojis. My question is: ${text}`;
 
     const payload = {
-      contents: [{
-        parts: [{ text: prompt }]
-      }]
+      contents: [{ parts: [{ text: prompt }] }]
     };
 
-    const response = await axios.post(
-      GEMINI_API_URL,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await axios.post(GEMINI_API_URL, payload, { headers: { "Content-Type": "application/json" } });
 
-    if (!response.data || !response.data.candidates || !response.data.candidates[0]?.content?.parts) {
-      return reply("❌ error in the answer. 😢");
-    }
-    
-    const aiResponse = response.data.candidates[0].content.parts[0].text;
-    await reply(`${aiResponse}`);
+    const aiResponse = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!aiResponse) return reply("❌ No response from AI 😢");
+
+    await reply(aiResponse);
+
   } catch (error) {
-    console.error("Error:", error.response?.data || error.message);
-    reply("❌ Error in the quation 😢");
+    console.error("Gemini Error:", error.response?.data || error.message);
+    reply("❌ Error talking to AI.");
+  }
+});
+
+
+// 📌 Auto reply to session messages
+cmd({
+  on: "message"   // catch all messages
+}, async (conn, mek, m, { reply, body, sender, pushname }) => {
+  try {
+    if (!geminiSessions[sender]) return; // Only reply if session is active
+    if (body.startsWith(".")) return;    // Avoid commands
+
+    const prompt = `My name is ${pushname}. Your name is Rasindu AI. You are a WhatsApp AI bot created by Rasindu(රසිදු). Answer in the same language I'm using. Answer naturally, like a human, not a bot. Add meaningful emojis. My message is: ${body}`;
+
+    const payload = {
+      contents: [{ parts: [{ text: prompt }] }]
+    };
+
+    const response = await axios.post(GEMINI_API_URL, payload, { headers: { "Content-Type": "application/json" } });
+
+    const aiResponse = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!aiResponse) return;
+
+    await reply(aiResponse);
+
+  } catch (error) {
+    console.error("Gemini Auto Reply Error:", error.response?.data || error.message);
   }
 });
