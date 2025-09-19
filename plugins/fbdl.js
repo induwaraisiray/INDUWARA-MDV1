@@ -6,7 +6,7 @@ const API_URL = "https://facebook-downloader.apis-bj-devs.workers.dev/"; // Curr
 
 cmd(
   {
-    pattern: "fb",
+    pattern: "fb1",
     alias: ["facebook"],
     react: "🎬",
     category: "download",
