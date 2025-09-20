@@ -202,7 +202,7 @@ cmd(
       const shareCount = result.data.share_count || 0;
 
       // Create a formatted caption
-      const caption = `*🫦 RASIYA TIKTOK DOWNLOADER 🫦*\n\n` +
+      const caption = `*🪄 VILON-X-MD TIKTOK DOWNLOADER 🪄*\n\n` +
         `🎥 *Title*: ${title}\n` +
         `👤 *Author*: ${author}\n` +
         `⏱️ *Duration*: ${duration}s\n` +
@@ -210,7 +210,7 @@ cmd(
         `💬 *Comments*: ${commentCount.toLocaleString()}\n` +
         `🔁 *Shares*: ${shareCount.toLocaleString()}\n` +
         `🔗 *URL*: ${tiktokUrl}\n\n` +
-        `*Made with Rasiya-MD*`;
+        `> *Made with Vilon-x-MD*`;
 
       // Try to change reaction to success on the processing message
       try {
@@ -358,7 +358,7 @@ cmd(
           audio: { url: audioUrl },
           mimetype: 'audio/mp4',
           fileName: `${title.replace(/[^\w\s]/gi, '')}.mp3`,
-          caption: `*🎵 TikTok Audio 🎵*\n\n🎵 *Title*: ${title}\n👤 *Artist*: ${author}\n\n*Made with Rasiya-MD🫦*`
+          caption: `*🎵 TikTok Audio 🎵*\n\n🎵 *Title*: ${title}\n👤 *Artist*: ${author}\n\n> *Made with Vilon-x-md*`
         },
         { quoted: mek }
       );
