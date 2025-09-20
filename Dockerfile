@@ -1,12 +1,12 @@
-# Use the LTS version of Node.js as the base image
-FROM node:lts-buster
+# Use the LTS version of Node.js (Debian bookworm)
+FROM node:lts-bookworm
 
-# Install necessary packages: ffmpeg, imagemagick, libwebp-tools
+# Install necessary packages: ffmpeg, imagemagick, libwebp-dev
 RUN apt-get update && \
     apt-get install -y \
     ffmpeg \
     imagemagick \
-    libwebp-tools && \
+    libwebp-dev && \
     apt-get upgrade -y && \
     rm -rf /var/lib/apt/lists/*
 
