@@ -1,105 +1,108 @@
-const { cmd, commands } = require('../command');
-const yts = require('yt-search');
-const ddownr = require('denethdev-ytmp3');
+const config = require('../config');
+const { cmd } = require('../command');
+const DY_SCRAP = require('@dark-yasiya/scrap');
+const dy_scrap = new DY_SCRAP();
+
+function replaceYouTubeID(url) {
+    try {
+        const cleanUrl = url.split('?')[0]; 
+        const regex = /(?:youtube\.com\/(?:.*v=|.*\/)|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
+        const match = cleanUrl.match(regex);
+        return match ? match[1] : null;
+    } catch {
+        return null;
+    }
+}
 
 cmd({
-  pattern: "song",
-  desc: "Download songs.",
-  category: "download",
-  react: '',
-  filename: __filename
-}, async (messageHandler, context, quotedMessage, { from, reply, q }) => {
-  try {
-    if (!q) return reply("⚠️ *කරුණාකර ගීතයේ නම හෝ URL එකක් ලබාදෙන්න!*");
+    pattern: "play3",
+    alias: ["mp3", "ytmp3"],
+    react: "🎵",
+    desc: "Download Ytmp3",
+    category: "download",
+    use: ".song <Text or YT URL>",
+    filename: __filename
+}, async (conn, m, mek, { from, q, reply }) => {
+    try {
+        if (!q) return await reply("❌ Please provide a Query or Youtube URL!");
 
-    const searchResults = await yts(q);
-    if (!searchResults || searchResults.videos.length === 0) {
-      return reply("❌ *ඔබේ සෙවුමට ගැලපෙන ගීතයක් හමු නොවීය!*");
-    }
+        let videoId = q.startsWith("http") ? replaceYouTubeID(q) : null;
 
-    const songData = searchResults.videos[0];
-    const songUrl = songData.url;
-
-    let songDetailsMessage = `*----------------------------------*\n`;
-    songDetailsMessage += ` *ගීත විස්තරය* \n\n`;
-    songDetailsMessage += `✨ *මාතෘකාව:* ${songData.title}\n`;
-    songDetailsMessage += ` *දර්ශන:* ${songData.views}\n`;
-    songDetailsMessage += `⏱️ *කාලය:* ${songData.timestamp}\n`;
-    songDetailsMessage += ` *උඩුගත කළ දිනය:* ${songData.ago}\n`;
-    songDetailsMessage += ` *චැනලය:* ${songData.author.name}\n`;
-    songDetailsMessage += ` *URL:* ${songData.url}\n\n`;
-    songDetailsMessage += `*බාගත කිරීමේ ආකෘතිය තෝරන්න:* \n\n`;
-    songDetailsMessage += `1️⃣ ||  *ශ්‍රව්‍ය ගොනුව* \n`;
-    songDetailsMessage += `2️⃣ ||  *ලේඛන ගොනුව* \n\n`;
-    songDetailsMessage += `*ʀᴀꜱɪʏᴀ-ᴍᴅ ʙʏ ʀᴀꜱɪɴᴅᴜ*\n`;
-    songDetailsMessage += `*----------------------------------*`;
-
-    const sentMessage = await messageHandler.sendMessage(from, {
-      image: { url: songData.thumbnail },
-      caption: songDetailsMessage,
-    }, { quoted: quotedMessage });
-
-    messageHandler.ev.on("messages.upsert", async (update) => {
-      const message = update.messages[0];
-      if (!message.message || !message.message.extendedTextMessage) return;
-
-      const userReply = message.message.extendedTextMessage.text.trim();
-
-      if (message.message.extendedTextMessage.contextInfo.stanzaId === sentMessage.key.id) {
-        switch (userReply) {
-          case '1':
-            await messageHandler.sendMessage(from, { text: "⏳ *ශ්‍රව්‍ය ගොනුව බාගත වෙමින් පවතී...* 🇱🇰\n\nby rasiya md" }, { quoted: quotedMessage });
-
-            const result = await ddownr.download(songUrl, 'mp3');
-
-            // After downloading, show upload progress in a single message
-            setTimeout(async () => {
-              await messageHandler.sendMessage(from, { text: "⏳ *ශ්‍රව්‍ය ගොනුව උඩුගත වෙමින් පවතී...* 🇱🇰\n\nby rasiya md" }, { quoted: quotedMessage });
-
-              await messageHandler.sendMessage(from, {
-                audio: { url: result.uploadUrl || result.downloadUrl },
-                mimetype: "audio/mpeg",
-                caption: "by rasiya md"
-              }, { quoted: quotedMessage });
-
-              // Bot signature added to the final message
-              await messageHandler.sendMessage(from, {
-                text: `\n🎉 *Bot by Rasiya-MD* 🇱🇰`
-              });
-            }, 1000);
-            break;
-
-          case '2':
-            await messageHandler.sendMessage(from, { text: "⏳ *ලේඛන ගොනුව බාගත වෙමින් පවතී...* 🇱🇰\n\nby rasiya md" }, { quoted: quotedMessage });
-
-            const docResult = await ddownr.download(songUrl, 'mp3');
-
-            // After downloading, show upload progress in a single message
-            setTimeout(async () => {
-              await messageHandler.sendMessage(from, { text: "⏳ *ලේඛන ගොනුව උඩුගත වෙමින් පවතී...* 🇱🇰\n\nby rasiya md" }, { quoted: quotedMessage });
-
-              await messageHandler.sendMessage(from, {
-                document: { url: docResult.uploadUrl || docResult.downloadUrl },
-                mimetype: 'audio/mpeg',
-                fileName: `${songData.title}.mp3`,
-                caption: `by rasiya md`
-              }, { quoted: quotedMessage });
-
-              // Bot signature added to the final message
-              await messageHandler.sendMessage(from, {
-                text: `\n🎉 *Bot by Rasiya-MD* 🇱🇰`
-              });
-            }, 1000);
-            break;
-
-          default:
-            reply("⚠️ *වලංගු විකල්පයක් තෝරන්න!*");
-            break;
+        // 🔹 If no videoId from link → search by text
+        if (!videoId) {
+            const searchResults = await dy_scrap.ytsearch(q);
+            if (!searchResults?.results?.length) return await reply("❌ No results found!");
+            videoId = searchResults.results[0].videoId;
         }
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    reply("❌ *ඔබගේ ඉල්ලීම සැකසීමේදී දෝෂයක් සිදුවිය!*");
-  }
-});
+
+        // 🔹 Fetch video info
+        const data = await dy_scrap.ytsearch(videoId);
+        if (!data?.results?.length) return await reply("❌ Failed to fetch video!");
+
+        const { url, title, image, timestamp, ago, views, author } = data.results[0];
+
+        let info = `🍄 *SENU-MD SONG DL* 🍄\n\n` +
+            `🎵 *Title:* ${title || "Unknown"}\n` +
+            `⏳ *Duration:* ${timestamp || "Unknown"}\n` +
+            `👀 *Views:* ${views || "Unknown"}\n` +
+            `🌏 *Release Ago:* ${ago || "Unknown"}\n` +
+            `👤 *Author:* ${author?.name || "Unknown"}\n` +
+            `🖇 *Url:* ${url || "Unknown"}\n\n` +
+            `🔽 *Reply with your choice:*\n` +
+            `1⃣ *Audio Type* 🎵\n` +
+            `2⃣ *Document Type* 📁\n\n` +
+            `${config.FOOTER || "𓆩JesterTechX𓆪"}`;
+
+        const sentMsg = await conn.sendMessage(from, { image: { url: image }, caption: info }, { quoted: mek });
+        const messageID = sentMsg.key.id;
+        await conn.sendMessage(from, { react: { text: '🎶', key: sentMsg.key } });
+
+        // 🔹 Wait only once for reply
+        conn.ev.once('messages.upsert', async (messageUpdate) => {
+            try {
+                const mekInfo = messageUpdate?.messages[0];
+                if (!mekInfo?.message) return;
+
+                const messageType = mekInfo?.message?.conversation || mekInfo?.message?.extendedTextMessage?.text;
+                const isReplyToSentMsg = mekInfo?.message?.extendedTextMessage?.contextInfo?.stanzaId === messageID;
+
+                if (!isReplyToSentMsg) return;
+
+                let userReply = messageType.trim();
+
+                if (userReply === "1" || userReply === "2") {
+                    // ⏳ React processing
+                    await conn.sendMessage(from, { react: { text: "⏳", key: mekInfo.key } });
+
+                    // 🔹 Download mp3
+                    const response = await dy_scrap.ytmp3(`https://youtu.be/${videoId}`);
+                    let downloadUrl = response?.result?.download?.url;
+                    if (!downloadUrl) return await reply("❌ Download link not found!");
+
+                    let type;
+                    if (userReply === "1") {
+                        type = { audio: { url: downloadUrl }, mimetype: "audio/mpeg" };
+                    } else {
+                        type = { document: { url: downloadUrl }, fileName: `${title}.mp3`, mimetype: "audio/mpeg", caption: title };
+                    }
+
+                    await conn.sendMessage(from, type, { quoted: mek });
+
+                    // ✅ React success
+                    await conn.sendMessage(from, { react: { text: "✅", key: mekInfo.key } });
+                } else {
+                    return await reply("❌ Invalid choice! Reply with 1 or 2.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                await reply(`❌ *An error occurred while processing:* ${error.message || "Error!"}`);
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        await conn.sendMessage(from, { react: { text: '❌', key: mek.key } });
+        await reply(`❌ *An error occurred:* ${error.message || "Error!"}`);
+    }
+});          
