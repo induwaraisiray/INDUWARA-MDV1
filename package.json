@@ -24,6 +24,7 @@
     "crypto-digest-sync": "^1.0.0",
     "cheerio": "^1.0.0-rc.12",
     "crypto-js": "latest",
+    "child_process": "latest",
     "file_size_url": "1.0.4",
     "fs-extra": "^11.3.0",
     "file-type": "^16.5.3",
