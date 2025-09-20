@@ -39,6 +39,7 @@
     "ruhend-scraper": "9.0.1",
     "qrcode-terminal": "^0.12.0",
     "yt-search": "latest",
+    "denethdev-ytmp3": "latest",
     "jimp": "latest",
     "sequelize": "^6.37.5",
     "sqlite3": "^5.1.7",
